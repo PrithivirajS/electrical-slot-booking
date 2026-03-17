@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Users</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>⚡ E-service</h2>
+        <ul>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li>Calendar</li>
+            <li class="active">Users</li>
+        </ul>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="profile-container">
+                <div id="profileBtn" class="profile-circle">
+                    <span id="initial"></span>
+                </div>
+
+                <div id="profileDropdown" class="dropdown">
+                    <div class="dropdown-content">
+                        <h3 id="username"></h3>
+                        <p id="email"></p>
+                        <a href="/logout" class="logout-btn">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>User Management</h2>
+            <button onclick="openModal()" class="add-btn">+ Add User</button>
+        </div>
+
+        <!-- 🔍 Search + Pagination Limit -->
+        <form method="get" style="margin-bottom: 15px; display:flex; gap:10px; align-items:center;">
+            
+            <input type="text" name="search"
+                   placeholder="Search name/email/phone"
+                   value="{{ search }}"
+                   style="padding:8px; width:250px;">
+
+            <!-- Limit Dropdown -->
+            <select name="limit" style="padding:8px;">
+                <option value="5" {% if request.args.get('limit') == '5' %}selected{% endif %}>5</option>
+                <option value="10" {% if request.args.get('limit') == '10' %}selected{% endif %}>10</option>
+                <option value="15" {% if request.args.get('limit','15') == '15' %}selected{% endif %}>15</option>
+                <option value="20" {% if request.args.get('limit') == '20' %}selected{% endif %}>20</option>
+            </select>
+
+            <button type="submit" class="edit-btn">Search</button>
+
+            <!-- Clear -->
+            <a href="/users" class="delete-btn" style="text-decoration:none;">Clear</a>
+
+        </form>
+
+        <!-- Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for u in users %}
+                <tr>
+
+                    <td>{{ u[1] }}</td>
+                    <td>{{ u[2] }}</td>
+
+                    <!-- Phone -->
+                    <td>
+                        <span id="phoneText{{ u[0] }}">{{ u[3] }}</span>
+                        <input type="text" id="phoneInput{{ u[0] }}" value="{{ u[3] }}" style="display:none;">
+                    </td>
+
+                    <!-- Role -->
+                    <td>
+                        <span id="roleText{{ u[0] }}">{{ u[5] }}</span>
+                        <select id="roleInput{{ u[0] }}" style="display:none;">
+                            <option value="user" {% if u[5]=='user' %}selected{% endif %}>User</option>
+                            <option value="admin" {% if u[5]=='admin' %}selected{% endif %}>Admin</option>
+                        </select>
+                    </td>
+
+                    <!-- Actions -->
+                    <td>
+                        <button id="editBtn{{ u[0] }}" onclick="editUser({{ u[0] }})" class="edit-btn">✏️</button>
+                        <button id="saveBtn{{ u[0] }}" onclick="saveUser({{ u[0] }})" class="save-btn" style="display:none;">💾</button>
+                        <button id="cancelBtn{{ u[0] }}" onclick="cancelEdit({{ u[0] }})" class="cancel-btn" style="display:none;">❌</button>
+                        <button onclick="deleteUser({{ u[0] }})" class="delete-btn">🗑️</button>
+                    </td>
+
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div style="margin-top:20px; text-align:center;">
+
+            {% if page > 1 %}
+                <a href="?search={{ search }}&page={{ page-1 }}&limit={{ request.args.get('limit',15) }}" class="edit-btn">⬅ Prev</a>
+            {% endif %}
+
+            <span style="margin: 0 10px;">Page {{ page }} of {{ total_pages }}</span>
+
+            {% if page < total_pages %}
+                <a href="?search={{ search }}&page={{ page+1 }}&limit={{ request.args.get('limit',15) }}" class="edit-btn">Next ➡</a>
+            {% endif %}
+
+        </div>
+
+        <!-- Modal -->
+        <div id="userModal" class="modal">
+            <div class="modal-content">
+                <h3>Add New User</h3>
+
+                <input type="text" id="newName" placeholder="Name"><br>
+                <input type="email" id="newEmail" placeholder="Email"><br>
+                <input type="text" id="newPhone" placeholder="Phone"><br>
+
+                <select id="newRole">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select><br>
+
+                <button onclick="addUser()" class="save-btn">Save</button>
+                <button onclick="closeModal()" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+</body>
+</html>

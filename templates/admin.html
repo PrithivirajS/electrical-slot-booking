@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h2>Create Slot</h2>
+
+<form action="/create_slot" method="post">
+<input type="date" name="date" required>
+<input type="text" name="time" placeholder="10:00-11:00" required>
+<input type="number" name="available" placeholder="Slots" required>
+<button type="submit">Create Slot</button>
+</form>
+
+</body>
+</html>

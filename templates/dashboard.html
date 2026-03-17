@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>⚡ E-service</h2>
+        <ul>
+            <li class="active">Dashboard</li>
+            <li>Calendar</li>
+            <li><a href="/users">Users</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="profile-container">
+
+                <!-- Profile Circle -->
+                <div id="profileBtn" class="profile-circle">
+                    <span id="initial"></span>
+                </div>
+
+                <!-- Dropdown -->
+                <div id="profileDropdown" class="dropdown">
+                    <div class="dropdown-content">
+
+                        <form action="/upload-profile" method="post" enctype="multipart/form-data">
+                            <input type="file" name="profile" accept="image/*">
+                            <button type="submit">Upload</button>
+                        </form>
+
+                        <h3 id="username"></h3>
+                        <p id="email"></p>
+
+                        <a href="/logout" class="logout-btn">Logout</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <h2>Today's Schedule</h2>
+
+        <!-- Cards -->
+        <div class="cards">
+            <div class="card">
+                <h3>Total Today</h3>
+                <p id="total">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Confirmed</h3>
+                <p id="confirmed">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Pending</h3>
+                <p id="pending">0</p>
+            </div>
+        </div>
+
+        <!-- Bookings -->
+        <div class="bookings" id="bookingList"></div>
+
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Electrical Slot Booking</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h2>Available Electrical Slots</h2>
+
+<table>
+<tr>
+<th>Date</th>
+<th>Time</th>
+<th>Available</th>
+<th>Book</th>
+</tr>
+
+{% for slot in slots %}
+<tr>
+<td>{{slot[1]}}</td>
+<td>{{slot[2]}}</td>
+<td>{{slot[3]}}</td>
+<td>
+<form action="/book" method="post">
+<input type="hidden" name="slot_id" value="{{slot[0]}}">
+<input type="text" name="name" placeholder="Name" required>
+<input type="email" name="email" placeholder="Email" required>
+<input type="text" name="phone" placeholder="Phone" required>
+<button type="submit">Book</button>
+</form>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</body>
+</html>

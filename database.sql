@@ -1,0 +1,32 @@
+CREATE DATABASE electrical_slots;
+USE electrical_slots;
+
+CREATE TABLE users (
+id INT AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(100),
+email VARCHAR(100),
+phone VARCHAR(20)
+);
+
+CREATE TABLE slots (
+id INT AUTO_INCREMENT PRIMARY KEY,
+slot_date DATE,
+slot_time VARCHAR(50),
+available INT
+);
+
+CREATE TABLE bookings (
+id INT AUTO_INCREMENT PRIMARY KEY,
+user_id INT,
+slot_id INT,
+payment_status VARCHAR(20),
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notifications (
+id INT AUTO_INCREMENT PRIMARY KEY,
+user_id INT,
+type VARCHAR(20),
+message TEXT,
+sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
