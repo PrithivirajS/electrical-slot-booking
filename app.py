@@ -6,6 +6,10 @@ import config
 from flask_mail import Mail, Message
 import os
 from werkzeug.utils import secure_filename
+from datetime import datetime, timedelta
+import math
+
+
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -176,42 +180,239 @@ def reset_password(email):
     return render_template("reset_password.html")
 
 
-# Book Slot
+from datetime import datetime, timedelta
+
+# @app.route("/booking")
+# @login_required
+# def booking_page():
+
+#     # Generate next 10 days slots
+#     slots = []
+
+#     for i in range(10):
+#         date = (datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d")
+
+#         for hour in range(9, 21):  # 9 AM to 9 PM
+#             time = f"{hour}:00"
+#             slots.append({
+#                 "date": date,
+#                 "time": time
+#             })
+
+#     # Get booked slots
+#     cur = mysql.connection.cursor()
+#     cur.execute("SELECT slot_id, booking_date FROM bookings")
+#     booked = cur.fetchall()
+
+#     booked_set = {(str(b[1]), str(b[0])) for b in booked}
+
+#     # Get user
+#     cur.execute("SELECT name, email, phone, address FROM users WHERE id=%s", (session['user_id'],))
+#     user = cur.fetchone()
+
+#     return render_template("dashboard.html",
+#                            page="booking",
+#                            slots=slots,
+#                            booked=booked_set,
+#                            user=user)
+
+from collections import defaultdict
+from datetime import datetime, timedelta
+
+from datetime import datetime, timedelta
+
+from datetime import datetime, timedelta
+
+@app.route("/booking")
+@login_required
+def booking_page():
+
+    days = []
+
+    for i in range(10):
+        date_obj = datetime.now() + timedelta(days=i)
+        date_str = date_obj.strftime("%Y-%m-%d")
+
+        if i == 0:
+            label = "Today"
+        elif i == 1:
+            label = "Tomorrow"
+        else:
+            label = date_obj.strftime("%a %d")
+
+        days.append({
+            "label": label,
+            "date": date_str
+        })
+
+    # ✅ Get logged-in user
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT name, email, phone, address 
+        FROM users 
+        WHERE id=%s
+    """, (session['user_id'],))
+
+    user = cur.fetchone()
+
+    return render_template(
+        "dashboard.html",
+        page="booking",
+        days=days,
+        user=user
+    )
+
+@app.route("/get-booked-slots")
+@login_required
+def get_booked_slots():
+    date = request.args.get("date")
+
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT slot_id FROM bookings WHERE booking_date=%s
+    """, (date,))
+
+    data = cur.fetchall()
+
+    slots = [row[0] for row in data]
+
+    return jsonify(slots)
+# @app.route("/book", methods=["POST"])
+# @login_required
+# def book():
+
+#     name = request.form.get('name')
+#     email = request.form.get('email')
+#     phone = request.form.get('phone')
+#     address = request.form.get('address')
+#     remarks = request.form.get('remarks')
+#     latitude = request.form.get('latitude')
+#     longitude = request.form.get('longitude')
+#     slot_id = request.form.get('slot_id')
+#     booking_date = request.form.get('booking_date')
+
+#     cur = mysql.connection.cursor()
+
+#     # 🚫 Prevent duplicate booking
+#     cur.execute("""
+#         SELECT id FROM bookings
+#         WHERE booking_date=%s AND slot_id=%s
+#     """, (booking_date, slot_id))
+
+#     if cur.fetchone():
+#         return "❌ Slot already booked!"
+
+#     # 👤 Get user
+#     user_id = session['user_id']
+
+#     tech_id = get_nearest_technician(float(latitude), float(longitude), booking_date, slot_id)
+
+
+#     # ✅ Insert booking
+#     cur.execute("""
+#         INSERT INTO bookings(user_id, slot_id, booking_date, payment_status)
+#         VALUES(%s,%s,%s,%s)
+#     """, (user_id, slot_id, booking_date, "Pending"))
+
+#     mysql.connection.commit()
+
+#     # 📧 SEND EMAIL
+#     try:
+#         msg = Message(
+#             "Booking Confirmed",
+#             sender=app.config['MAIL_USERNAME'],
+#             recipients=[email]
+#         )
+
+#         msg.body = f"""
+# Hello {name},
+
+# Your booking is confirmed.
+
+# Date: {booking_date}
+# Slot: {slot_id}
+
+# Thank you!
+#         """
+
+#         mail.send(msg)
+#     except Exception as e:
+#         print("Mail Error:", e)
+
+#     return redirect("/booking?success=1")
+
+import requests  # 🔥 ADD THIS
+
 @app.route("/book", methods=["POST"])
 @login_required
 def book():
-    name = request.form['name']
-    email = request.form['email']
-    phone = request.form['phone']
-    slot_id = request.form['slot_id']   
+
+    name = request.form.get('name')
+    email = request.form.get('email')
+    phone = request.form.get('phone')
+    address = request.form.get('address')
+    remarks = request.form.get('remarks')
+    latitude = request.form.get('latitude')
+    longitude = request.form.get('longitude')
+    slot_id = request.form.get('slot_id')
+    booking_date = request.form.get('booking_date')
 
     cur = mysql.connection.cursor()
 
-    cur.execute(
-        "INSERT INTO users(name,email,phone) VALUES(%s,%s,%s)",
-        (name, email, phone)
-    )
-    user_id = cur.lastrowid
+    # 🚫 Duplicate check
+    cur.execute("""
+        SELECT id FROM bookings
+        WHERE booking_date=%s AND slot_id=%s
+    """, (booking_date, slot_id))
 
-    cur.execute(
-        "INSERT INTO bookings(user_id,slot_id,payment_status) VALUES(%s,%s,%s)",
-        (user_id, slot_id, "Pending")
+    if cur.fetchone():
+        return "❌ Slot already booked!"
+
+    user_id = session['user_id']
+
+    # 🔥 AUTO ASSIGN TECHNICIAN
+    tech_id = get_nearest_technician(
+        float(latitude), float(longitude),
+        booking_date, slot_id
     )
+
+    if not tech_id:
+        return "❌ No technician available"
+
+    # ✅ INSERT WITH TECHNICIAN
+    cur.execute("""
+        INSERT INTO bookings(user_id, slot_id, booking_date, payment_status, technician_id)
+        VALUES(%s,%s,%s,%s,%s)
+    """, (user_id, slot_id, booking_date, "Pending", tech_id))
 
     mysql.connection.commit()
+    print("DEBUG:", slot_id, booking_date, latitude, longitude)
 
-    try:
-        msg = Message(
-            "Slot Booking Confirmation",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[email]
-        )
-        msg.body = "Your electrical service slot has been booked successfully."
-        mail.send(msg)
-    except Exception as e:
-        print("Mail Error:", e)
+    #    # 📧 SEND EMAIL
+    #     try:
+    #         msg = Message(
+    #             "Booking Confirmed",
+    #             sender=app.config['MAIL_USERNAME'],
+    #             recipients=[email]
+    #         )
 
-    return redirect("/")
+    #         msg.body = f"""
+    # Hello {name},
+
+    # Your booking is confirmed.
+
+    # Date: {booking_date}
+    # Slot: {slot_id}
+
+    # Thank you!
+    #         """
+
+    #         mail.send(msg)
+    #     except Exception as e:
+    #         print("Mail Error:", e)
+
+
+    return redirect("/booking?success=1")
 
 
 # Admin Page
@@ -354,7 +555,7 @@ def users():
     search = request.args.get("search", "").strip()
     page = int(request.args.get("page", 1))
 
-    limit = 5
+    limit = 15
     offset = (page - 1) * limit
 
     cur = mysql.connection.cursor()
@@ -500,6 +701,412 @@ def add_user():
     mysql.connection.commit()
 
     return {"status": "success"}
+
+@app.route("/admin/bookings")
+@admin_required
+def admin_bookings():
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT b.id, u.name, b.booking_date, b.slot_id, b.payment_status
+        FROM bookings b
+        JOIN users u ON b.user_id = u.id
+        ORDER BY b.id DESC
+    """)
+
+    bookings = cur.fetchall()
+
+    return render_template("admin_bookings.html", bookings=bookings)
+
+@app.route("/update-status", methods=["POST"])
+def update_status():
+
+    booking_id = request.form.get("id")
+    status = request.form.get("status")
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        UPDATE bookings SET payment_status=%s WHERE id=%s
+    """, (status, booking_id))
+
+    mysql.connection.commit()
+
+    return redirect("/admin/bookings")
+
+import math
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    return math.sqrt((lat1 - lat2)**2 + (lon1 - lon2)**2)
+
+
+# def get_nearest_technician(user_lat, user_lon, booking_date, slot_id):
+
+#     cur = mysql.connection.cursor()
+
+#     # Get available technicians
+#     cur.execute("SELECT id, latitude, longitude FROM technician WHERE status='Available'")
+#     techs = cur.fetchall()
+
+#     nearest = None
+#     min_dist = float("inf")
+
+#     for t in techs:
+#         tech_id, lat, lon = t
+
+#         # ❌ check if already booked at same time
+#         cur.execute("""
+#             SELECT id FROM bookings
+#             WHERE technician_id=%s AND booking_date=%s AND slot_id=%s
+#         """, (tech_id, booking_date, slot_id))
+
+#         if cur.fetchone():
+#             continue  # busy
+
+#         dist = calculate_distance(user_lat, user_lon, lat, lon)
+
+#         if dist < min_dist:
+#             min_dist = dist
+#             nearest = tech_id
+
+#     return nearest
+
+
+
+# def get_nearest_technician(user_lat, user_lon, booking_date, slot_id):
+
+#     cur = mysql.connection.cursor()
+
+#     # ✅ ONLY ACTIVE TECHNICIANS
+#     cur.execute("""
+#         SELECT id, latitude, longitude 
+#         FROM technician 
+#         WHERE status='Available' AND active=1
+#     """)
+#     techs = cur.fetchone()
+#     return tech[0] if tech else None
+# def get_nearest_technician(user_lat, user_lon, booking_date, slot_id):
+
+#     cur = mysql.connection.cursor()
+
+#     cur.execute("""
+#         SELECT id FROM technician 
+#         WHERE status='Available' AND active=1
+#         LIMIT 1
+#     """)
+
+#     tech = cur.fetchone()
+
+#     return tech[0] if tech else None
+#     best_tech = None
+#     min_time = float("inf")
+# def get_nearest_technician(user_lat, user_lon, booking_date, slot_id):
+
+#     cur = mysql.connection.cursor()
+
+#     cur.execute("""
+#         SELECT id FROM technician 
+#         WHERE status='Available' AND active=1
+#         LIMIT 1
+#     """)
+
+#     tech = cur.fetchone()
+
+#     return tech[0] if tech else None
+
+
+#     for tech in techs:
+#         tech_id, lat, lon = tech
+
+#         # ❌ skip busy technician
+#         cur.execute("""
+#             SELECT id FROM bookings
+#             WHERE technician_id=%s AND booking_date=%s AND slot_id=%s
+#         """, (tech_id, booking_date, slot_id))
+
+#         if cur.fetchone():
+#             continue
+
+#         # ✅ GOOGLE MAP DISTANCE API
+#         url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={user_lat},{user_lon}&destinations={lat},{lon}&key=YOUR_API_KEY"
+
+#         res = requests.get(url).json()
+
+#         try:
+#             duration = res['rows'][0]['elements'][0]['duration']['value']
+#         except:
+#             continue
+
+#         if duration < min_time:
+#             min_time = duration
+#             best_tech = tech_id
+
+#     return best_tech
+
+def get_nearest_technician(user_lat, user_lon, booking_date, slot_id):
+
+    cur = mysql.connection.cursor()
+
+    # ✅ Get all active technicians
+    cur.execute("""
+        SELECT id, latitude, longitude 
+        FROM technician 
+        WHERE status='Available' AND active=1
+    """)
+
+    techs = cur.fetchall()
+
+    best_tech = None
+    min_dist = float("inf")
+
+    for tech in techs:
+        tech_id, lat, lon = tech
+
+        # 🚫 Skip if already booked for same slot
+        cur.execute("""
+            SELECT id FROM bookings
+            WHERE technician_id=%s AND booking_date=%s AND slot_id=%s
+        """, (tech_id, booking_date, slot_id))
+
+        if cur.fetchone():
+            continue
+
+        # ✅ Simple distance calculation
+        try:
+            dist = (float(user_lat) - float(lat))**2 + (float(user_lon) - float(lon))**2
+        except:
+            continue
+
+        if dist < min_dist:
+            min_dist = dist
+            best_tech = tech_id
+
+    return best_tech
+
+@app.route("/toggle-tech", methods=["POST"])
+def toggle_tech():
+
+    tech_id = request.form.get("tech_id")
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        UPDATE technicians 
+        SET active = CASE WHEN active=1 THEN 0 ELSE 1 END
+        WHERE id=%s
+    """, (tech_id,))
+
+    mysql.connection.commit()
+
+    return redirect("/admin/bookings")
+
+@app.route("/update-tech-location", methods=["POST"])
+def update_location():
+
+    tech_id = request.json['id']
+    lat = request.json['lat']
+    lng = request.json['lng']
+
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        UPDATE technicians SET latitude=%s, longitude=%s WHERE id=%s
+    """, (lat, lng, tech_id))
+
+    mysql.connection.commit()
+
+    return {"status": "updated"}
+
+@app.route("/get-tech-location")
+def get_tech_location():
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT latitude, longitude 
+        FROM technician 
+        WHERE active=1 LIMIT 1
+    """)
+
+    tech = cur.fetchone()
+
+    if not tech:
+        return jsonify({})
+
+    return jsonify({
+        "lat": tech[0],
+        "lng": tech[1]
+    })
+
+@app.route("/add_technician", methods=["POST"])
+@admin_required
+def add_technician():
+    try:
+        cur = mysql.connection.cursor()
+
+        name = request.form.get("name")
+        phone1 = request.form.get("phone1")
+        phone2 = request.form.get("phone2")
+
+        address = request.form.get("flat")
+        street = request.form.get("street")
+        post = request.form.get("post")
+        taluk = request.form.get("taluk")
+        district = request.form.get("district")
+        pincode = request.form.get("pincode")
+
+        education = request.form.get("education")
+        proof_type = request.form.get("govtType")
+        proof_file = request.form.get("govtNumber")
+
+        resume_file = request.files.get("resume")
+        photo_file = request.files.get("photo")
+
+        resume_path = None
+        photo_path = None
+
+        # Resume (PDF)
+        if resume_file and resume_file.filename != "":
+            filename = secure_filename(resume_file.filename)
+            resume_path = f"documents/{filename}"
+            resume_file.save(os.path.join(app.config['DOC_FOLDER'], filename))
+
+        # Photo
+        if photo_file and photo_file.filename != "":
+            filename = secure_filename(photo_file.filename)
+            photo_path = f"uploads/{filename}"
+            photo_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        # ✅ DUPLICATE CHECK
+        cur.execute("""
+            SELECT id FROM technician
+            WHERE name=%s AND phone1=%s AND street=%s
+        """, (name, phone1, street))
+
+        if cur.fetchone():
+            return jsonify({"error": "Technician already exists"}), 400
+
+        # ✅ INSERT (MATCH DB STRUCTURE)
+        cur.execute("""
+            INSERT INTO technician
+            (name, phone1, phone2, address, street, post, taluk, district, pincode,
+             education, proof_type, proof_file, resume_path, photo_path, status, active)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Available',1)
+        """, (
+            name, phone1, phone2, address, street, post,
+            taluk, district, pincode,
+            education, proof_type, proof_file,
+            resume_path, photo_path
+        ))
+
+        mysql.connection.commit()
+
+        return jsonify({"status": "success"})
+
+    except Exception as e:
+        print("ERROR:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/technicians")
+@admin_required
+def technicians():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM technician ORDER BY id DESC")
+    techs = cur.fetchall()
+
+    return render_template("technicians.html", technicians=techs)
+
+UPLOAD_FOLDER = "static/uploads"
+DOC_FOLDER = "static/documents"
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['DOC_FOLDER'] = DOC_FOLDER
+
+# Create folders if not exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(DOC_FOLDER, exist_ok=True)
+
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+ALLOWED_DOC_EXTENSIONS = {'pdf'}
+
+def allowed_file(filename, allowed_types):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_types
+
+@app.route("/get-technician/<int:id>")
+def get_technician(id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM technician WHERE id=%s", (id,))
+    t = cur.fetchone()
+
+    return jsonify({
+        "id": t[0],
+        "name": t[1],
+        "phone1": t[2],
+        "street": t[5]
+    })
+
+@app.route("/update-technician", methods=["POST"])
+def update_technician():
+
+    id = request.form.get("id")
+    name = request.form.get("name")
+    phone1 = request.form.get("phone1")
+
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        UPDATE technician SET name=%s, phone1=%s
+        WHERE id=%s
+    """, (name, phone1, id))
+
+    mysql.connection.commit()
+    return jsonify({"status": "updated"})
+
+@app.route("/delete-technician", methods=["POST"])
+def delete_technician():
+    data = request.get_json()
+    id = data['id']
+
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM technician WHERE id=%s", (id,))
+    mysql.connection.commit()
+
+    return {"status": "deleted"}
+
+@app.route("/toggle-technician", methods=["POST"])
+def toggle_technician():
+    data = request.get_json()
+    id = data['id']
+
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        UPDATE technician
+        SET active = CASE WHEN active=1 THEN 0 ELSE 1 END
+        WHERE id=%s
+    """, (id,))
+    mysql.connection.commit()
+
+    return {"status": "updated"}
+
+@app.route("/technician/bookings")
+def technician_bookings():
+
+    tech_id = session.get("user_id")  # or technician session
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT b.id, u.name, b.booking_date, b.slot_id, b.payment_status
+        FROM bookings b
+        JOIN users u ON b.user_id = u.id
+        WHERE b.technician_id=%s
+        ORDER BY b.booking_date DESC
+    """, (tech_id,))
+
+    data = cur.fetchall()
+
+    return render_template("technician_bookings.html", bookings=data)
+
+
 
 # ---------------------------
 # RUN

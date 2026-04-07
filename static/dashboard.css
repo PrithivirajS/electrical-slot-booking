@@ -254,3 +254,347 @@ input, select {
 a.edit-btn {
     text-decoration: none;
 }
+
+.menu-item {
+    display: block;
+    padding: 10px;
+    color: white;
+    text-decoration: none;
+}
+
+.menu-item.active {
+    background: #6c2bd9;
+    border-radius: 5px;
+}
+
+.date-tab {
+    padding: 8px 15px;
+    background: #eee;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.date-tab.active {
+    background: #6c2bd9;
+    color: white;
+}
+
+.slot {
+    padding: 12px;
+    background: white;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid #ddd;
+}
+
+.slot.selected {
+    background: #6c2bd9;
+    color: white;
+}
+
+.slot.disabled {
+    background: #ddd;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* DATE ROW */
+.date-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.date-card {
+    padding: 10px;
+    background: #eee;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.date-card.active {
+    background: #3b82f6;
+    color: white;
+}
+
+/* SLOT ROW */
+.slot-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.slot-btn {
+    padding: 10px 15px;
+    background: #f3f4f6;
+    border-radius: 10px;
+    cursor: pointer;
+    border: none;
+}
+
+.slot-btn:hover {
+    background: #e0e7ff;
+}
+
+.slot-btn.selected {
+    background: #3b82f6;
+    color: white;
+}
+
+.slot-btn.disabled {
+    background: #ddd;
+    cursor: not-allowed;
+}
+
+/* ===== BOOKING UI FINAL ===== */
+
+.booking-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.booking-left {
+    flex: 2;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.booking-right {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+/* SECTION TITLE */
+.section-title {
+    color: #666;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+/* DATE */
+.date-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.date-card {
+    padding: 8px 12px;
+    background: #eee;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.date-card.active {
+    background: #3b82f6;
+    color: white;
+}
+
+/* 🔥 GRID FIX (MAIN FIX) */
+.slot-row {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+/* SLOT BUTTON */
+.slot-btn {
+    padding: 10px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.slot-btn:hover {
+    background: #e0e7ff;
+}
+
+.slot-btn.selected {
+    background: #3b82f6;
+    color: white;
+}
+
+.slot-btn.disabled {
+    background: #ddd;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* WRAPPER */
+.booking-wrapper {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+/* LEFT */
+.booking-left {
+    flex: 2;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+/* RIGHT */
+.booking-right {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+/* SERVICE CARD */
+.service-card {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.service-img {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+}
+
+/* CALENDAR */
+.calendar-row {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.calendar-day {
+    padding: 8px 12px;
+    background: #eee;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.calendar-day.active {
+    background: #3b82f6;
+    color: white;
+}
+
+/* SLOT GRID */
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* SLOT BUTTON */
+.slot-btn {
+    padding: 10px;
+    background: #f3f4f6;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.slot-btn.selected {
+    background: #3b82f6;
+    color: white;
+}
+
+/* SECTION TITLE */
+.section-title {
+    color: #666;
+    font-size: 14px;
+}
+
+/* BUTTON */
+.confirm-btn {
+    margin-top: 10px;
+    background: #3b82f6;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.sidebar ul li {
+    list-style: none;
+    margin-bottom: 10px;
+}
+
+.menu-item {
+    display: block;
+    padding: 10px;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.menu-item:hover {
+    background: #1e3a8a;
+}
+
+.modal-content {
+    width: 400px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Scroll only inside body */
+.modal-body {
+    overflow-y: auto;
+    max-height: 70vh;
+    padding: 10px;
+}
+
+/* Sticky footer */
+.modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+}
+
+.success-box {
+    background: white;
+    width: 350px;
+    margin: 120px auto;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.success-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    font-size: 28px;
+    color: #4CAF50;
+    margin-bottom: 15px;
+}
+
+.confirm-btn {
+    background: #1e3a8a;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+}

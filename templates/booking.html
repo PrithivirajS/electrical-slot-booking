@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Booking</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f5f6fa;
+    margin: 0;
+}
+
+/* MAIN CONTAINER */
+.container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* LEFT SECTION */
+.left {
+    width: 70%;
+}
+
+/* RIGHT SECTION */
+.right {
+    width: 30%;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+/* CARD */
+.card {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+/* SLOT STYLE */
+.slot {
+    display: inline-block;
+    padding: 10px 14px;
+    margin: 6px;
+    border-radius: 6px;
+    background: #eee;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.slot:hover {
+    background: #6c5ce7;
+    color: white;
+}
+
+.active-slot {
+    background: #6c5ce7;
+    color: white;
+}
+
+/* BUTTON */
+.btn {
+    width: 100%;
+    padding: 12px;
+    background: #4b2aad;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.btn:hover {
+    background: #37208a;
+}
+
+h3 {
+    margin-bottom: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- LEFT SECTION -->
+    <div class="left">
+
+        <!-- SERVICE CARD -->
+        <div class="card">
+            <h3>Electrical Service</h3>
+            <p>Professional electrical service at your location</p>
+            <p><b>₹500 • 30 minutes</b></p>
+        </div>
+
+        <!-- SLOT SELECTION -->
+        <div class="card">
+            <h3>Select Time Slot</h3>
+
+            {% for slot in slots %}
+                <div class="slot"
+                     onclick="selectSlot(this, '{{slot[0]}}', '{{slot[1]}}', '{{slot[2]}}')">
+                    {{slot[2]}}
+                </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT SECTION -->
+    <div class="right">
+
+        <h3>Service Details</h3>
+
+        <p><b>Name:</b> {{user[0]}}</p>
+        <p><b>Email:</b> {{user[1]}}</p>
+        <p><b>Phone:</b> {{user[2]}}</p>
+        <p><b>Address:</b> {{user[3]}}</p>
+
+        <hr>
+
+        <p><b>Selected Slot:</b> <span id="selectedSlot">None</span></p>
+
+        <!-- BOOKING FORM -->
+        <form action="/book" method="post" onsubmit="return handleBooking(this)">
+
+            <input type="hidden" name="slot_id" id="slot_id">
+            <input type="hidden" name="latitude">
+            <input type="hidden" name="longitude">
+
+            <textarea name="remarks" placeholder="Enter remarks"></textarea>
+
+            <br><br>
+
+            <button class="btn" type="submit">Confirm Booking</button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+let selectedDiv = null;
+
+// SLOT SELECT FUNCTION
+function selectSlot(el, id, date, time) {
+
+    if (selectedDiv) {
+        selectedDiv.classList.remove("active-slot");
+    }
+
+    el.classList.add("active-slot");
+    selectedDiv = el;
+
+    document.getElementById("slot_id").value = id;
+    document.getElementById("selectedSlot").innerText = date + " " + time;
+}
+
+// LOCATION + VALIDATION
+function handleBooking(form) {
+
+    if (!form.slot_id.value) {
+        alert("Please select slot");
+        return false;
+    }
+
+    navigator.geolocation.getCurrentPosition(function(position) {
+        form.latitude.value = position.coords.latitude;
+        form.longitude.value = position.coords.longitude;
+        form.submit();
+    });
+
+    return false;
+}
+
+</script>
+
+</body>
+</html>

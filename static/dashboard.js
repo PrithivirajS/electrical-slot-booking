@@ -25,7 +25,6 @@ function loadDashboard() {
     });
 }
 
-
 // ============================
 // PROFILE DATA
 // ============================
@@ -53,24 +52,24 @@ function loadProfile() {
     });
 }
 
-
 // ============================
 // DROPDOWN
 // ============================
 const btn = document.getElementById("profileBtn");
 const dropdown = document.getElementById("profileDropdown");
 
-btn.onclick = () => {
-    dropdown.style.display =
-        dropdown.style.display === "block" ? "none" : "block";
-};
+if (btn) {
+    btn.onclick = () => {
+        dropdown.style.display =
+            dropdown.style.display === "block" ? "none" : "block";
+    };
+}
 
 window.onclick = function(e) {
     if (!e.target.closest('.profile-container')) {
         dropdown.style.display = "none";
     }
 };
-
 
 // ============================
 // INIT
@@ -79,149 +78,338 @@ loadDashboard();
 loadProfile();
 
 // ============================
-// UPDATE USER
+// SLOT BOOKING UI (FINAL FIX)
 // ============================
-function updateUser(id) {
 
-    let phone = document.getElementById("phone" + id).value;
-    let role = document.getElementById("role" + id).value;
+let selectedSlot = null;
 
-    fetch('/update-user', {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            id: id,
-            phone: phone,
-            role: role
-        })
-    })
+// Format time
+function formatTime(hour) {
+    let ampm = hour >= 12 ? "PM" : "AM";
+    let h = hour % 12;
+    if (h === 0) h = 12;
+    return h + ":00 " + ampm;
+}
+
+// Generate slots
+// function generateSlots(date) {
+
+//     console.log("Generating slots for:", date);
+
+//     document.getElementById("morningSlots").innerHTML = "";
+//     document.getElementById("afternoonSlots").innerHTML = "";
+//     document.getElementById("eveningSlots").innerHTML = "";
+
+//     for (let hour = 9; hour < 21; hour++) {
+
+//         let start = formatTime(hour);
+//         let end = formatTime(hour + 1);
+
+//         let slotText = `${start} - ${end}`;
+
+//         let btn = document.createElement("button");
+//         btn.className = "slot-btn";
+//         btn.innerText = slotText;
+
+//         btn.onclick = function () {
+
+//             if (selectedSlot) selectedSlot.classList.remove("selected");
+
+//             btn.classList.add("selected");
+//             selectedSlot = btn;
+
+//             document.getElementById("slot_id").value = slotText;
+//             document.getElementById("booking_date").value = date;
+//         };
+
+//         // Grouping
+//         if (hour < 12) {
+//             document.getElementById("morningSlots").appendChild(btn);
+//         } else if (hour < 17) {
+//             document.getElementById("afternoonSlots").appendChild(btn);
+//         } else {
+//             document.getElementById("eveningSlots").appendChild(btn);
+//         }
+//     }
+// }
+
+function generateSlots(date) {
+
+    fetch(`/get-booked-slots?date=${date}`)
     .then(res => res.json())
-    .then(data => {
-        alert("User updated successfully");
+    .then(bookedSlots => {
+
+        document.getElementById("morningSlots").innerHTML = "";
+        document.getElementById("afternoonSlots").innerHTML = "";
+        document.getElementById("eveningSlots").innerHTML = "";
+
+        for (let hour = 9; hour < 21; hour++) {
+
+            let start = formatTime(hour);
+            let end = formatTime(hour + 1);
+
+            let slotText = `${start} - ${end}`;
+
+            let btn = document.createElement("button");
+            btn.className = "slot-btn";
+            btn.innerText = slotText;
+
+            // 🚫 DISABLE BOOKED SLOT
+            if (bookedSlots.includes(slotText)) {
+                btn.classList.add("disabled");
+                btn.disabled = true;
+            }
+
+            btn.onclick = function () {
+
+                if (btn.classList.contains("disabled")) return;
+
+                if (selectedSlot) selectedSlot.classList.remove("selected");
+
+                btn.classList.add("selected");
+                selectedSlot = btn;
+
+                document.getElementById("slot_id").value = hour;
+                document.getElementById("booking_date").value = date;
+
+                document.getElementById("selectedSlotText").innerText = slotText;
+
+                startTimer(300); // 5 mins
+            };
+
+            if (hour < 12) {
+                document.getElementById("morningSlots").appendChild(btn);
+            } else if (hour < 17) {
+                document.getElementById("afternoonSlots").appendChild(btn);
+            } else {
+                document.getElementById("eveningSlots").appendChild(btn);
+            }
+        }
     });
 }
 
+// Date select
+// function selectDate(el, date) {
 
-// ============================
-// DELETE USER
-// ============================
-function deleteUser(id) {
+//     console.log("Date clicked:", date);
 
-    if (!confirm("Are you sure to delete this user?")) return;
+//     document.querySelectorAll(".date-card").forEach(d => d.classList.remove("active"));
+//     el.classList.add("active");
 
-    fetch('/delete-user', {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ id: id })
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert("User deleted");
-        location.reload();
+//     generateSlots(date);
+// }
+
+function selectDate(el, date, label) {
+
+    document.querySelectorAll(".calendar-day").forEach(d => d.classList.remove("active"));
+    el.classList.add("active");
+
+    document.getElementById("selectedDateText").innerText = label;
+
+    generateSlots(date);
+}
+
+// Auto load
+window.onload = function () {
+
+    console.log("Page loaded");
+
+    const first = document.querySelector(".calendar-day");
+
+    if (first) {
+        first.click();
+    } else {
+        console.error("Date tabs not found");
+    }
+};
+
+
+let timerInterval;
+
+function startTimer(seconds) {
+
+    clearInterval(timerInterval);
+
+    timerInterval = setInterval(() => {
+        let min = Math.floor(seconds / 60);
+        let sec = seconds % 60;
+
+        document.getElementById("timer").innerText =
+            `${min}:${sec < 10 ? '0' : ''}${sec}`;
+
+        if (seconds <= 0) {
+            clearInterval(timerInterval);
+            alert("⏰ Slot expired! Please reselect.");
+        }
+
+        seconds--;
+    }, 1000);
+}
+
+navigator.geolocation.getCurrentPosition(function(pos) {
+    document.getElementById("latitude").value = pos.coords.latitude;
+    document.getElementById("longitude").value = pos.coords.longitude;
+
+    document.getElementById("map").innerHTML =
+        `Lat: ${pos.coords.latitude} <br> Long: ${pos.coords.longitude}`;
+});
+
+
+setInterval(() => {
+
+    const active = document.querySelector(".calendar-day.active");
+
+    if (active) {
+        active.click();
+    }
+
+}, 30000);
+
+function showDistance(userLat, userLng, techLat, techLng) {
+
+    let service = new google.maps.DistanceMatrixService();
+
+    service.getDistanceMatrix({
+        origins: [{lat: userLat, lng: userLng}],
+        destinations: [{lat: techLat, lng: techLng}],
+        travelMode: 'DRIVING'
+    }, function(response) {
+
+        let data = response.rows[0].elements[0];
+
+        document.getElementById("travelInfo").innerText =
+            data.distance.text + " | " + data.duration.text;
     });
 }
 
-function editUser(id) {
+function updateDistance(userLat, userLng) {
 
-    // Show inputs
-    document.getElementById("phoneText" + id).style.display = "none";
-    document.getElementById("roleText" + id).style.display = "none";
-
-    document.getElementById("phoneInput" + id).style.display = "inline";
-    document.getElementById("roleInput" + id).style.display = "inline";
-
-    // Toggle buttons
-    document.getElementById("editBtn" + id).style.display = "none";
-    document.getElementById("saveBtn" + id).style.display = "inline";
-    document.getElementById("cancelBtn" + id).style.display = "inline";
-}
-
-function saveUser(id) {
-
-    let phone = document.getElementById("phoneInput" + id).value;
-    let role = document.getElementById("roleInput" + id).value;
-
-    fetch('/update-user', {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            id: id,
-            phone: phone,
-            role: role
-        })
-    })
+    fetch("/get-tech-location")
     .then(res => res.json())
     .then(data => {
 
-        // Update UI
-        document.getElementById("phoneText" + id).innerText = phone;
-        document.getElementById("roleText" + id).innerText = role;
+        if (!data) return;
 
-        cancelEdit(id);
-
-        alert("Updated successfully");
+        showDistance(userLat, userLng, data.lat, data.lng);
     });
 }
 
-function cancelEdit(id) {
-
-    // Hide inputs
-    document.getElementById("phoneInput" + id).style.display = "none";
-    document.getElementById("roleInput" + id).style.display = "none";
-
-    // Show text
-    document.getElementById("phoneText" + id).style.display = "inline";
-    document.getElementById("roleText" + id).style.display = "inline";
-
-    // Toggle buttons
-    document.getElementById("editBtn" + id).style.display = "inline";
-    document.getElementById("saveBtn" + id).style.display = "none";
-    document.getElementById("cancelBtn" + id).style.display = "none";
+function openRoleModal() {
+    document.getElementById("roleModal").style.display = "block";
 }
 
-// ============================
-// MODAL CONTROL
-// ============================
-function openModal() {
-    document.getElementById("userModal").style.display = "block";
+function closeRoleModal() {
+    document.getElementById("roleModal").style.display = "none";
 }
 
-function closeModal() {
-    document.getElementById("userModal").style.display = "none";
+function goUser() {
+    window.location.href = "/users";
 }
 
+function goTech() {
+    window.location.href = "/technicians";
+}
 
-// ============================
-// ADD USER
-// ============================
-function addUser() {
+function addTechnician() {
 
-    let name = document.getElementById("newName").value;
-    let email = document.getElementById("newEmail").value;
-    let phone = document.getElementById("newPhone").value;
-    let role = document.getElementById("newRole").value;
+    let formData = new FormData(form);
+    let form = document.getElementById("techForm");
 
-    fetch('/add-user', {
+    formData.append("name", document.getElementById("name").value);
+    formData.append("guardian", document.getElementById("guardian").value);
+    formData.append("phone1", document.getElementById("phone1").value);
+    formData.append("phone2", document.getElementById("phone2").value);
+
+    formData.append("flat", document.getElementById("flat").value);
+    formData.append("street", document.getElementById("street").value);
+    formData.append("post", document.getElementById("post").value);
+    formData.append("taluk", document.getElementById("taluk").value);
+    formData.append("district", document.getElementById("district").value);
+    formData.append("pincode", document.getElementById("pincode").value);
+
+    formData.append("education", document.getElementById("education").value);
+    formData.append("experience", document.getElementById("experience").value);
+
+    formData.append("govtType", document.getElementById("govtType").value);
+    formData.append("govtNumber", document.getElementById("govtNumber").value);
+
+    formData.append("rating", document.getElementById("rating").value);
+    formData.append("review", document.getElementById("review").value);
+
+    // FILES
+    let resume = document.getElementById("resume").files[0];
+    let photo = document.getElementById("photo").files[0];
+
+    if (resume) formData.append("resume", resume);
+    if (photo) formData.append("photo", photo);
+
+    fetch("/add_technician", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            name: name,
-            email: email,
-            phone: phone,
-            role: role
-        })
+        body: formData
     })
     .then(res => res.json())
     .then(data => {
-        alert("User added successfully");
-        location.reload();
+        console.log(data);
+
+        if (data.status === "success") {
+            closeModal();        // close form
+            showSuccessPopup();  // show popup
+        } else {
+            alert(data.error);
+        }
     });
+}
+
+function showSuccessPopup() {
+    document.getElementById("successPopup").style.display = "block";
+}
+
+function closeSuccessPopup() {
+    document.getElementById("successPopup").style.display = "none";
+    location.reload(); // optional refresh
+}
+
+function editTech(id) {
+    fetch(`/get-technician/${id}`)
+    .then(res => res.json())
+    .then(data => {
+
+        openModal();
+
+        document.querySelector('[name="name"]').value = data.name;
+        document.querySelector('[name="phone1"]').value = data.phone1;
+        document.querySelector('[name="street"]').value = data.street;
+
+        document.getElementById("techForm").dataset.id = id;
+    });
+}
+
+function deleteTech(id) {
+
+    if (!confirm("Are you sure?")) return;
+
+    fetch("/delete-technician", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({id: id})
+    })
+    .then(() => location.reload());
+}
+
+function handleBooking(form) {
+
+    if (!form.slot_id.value) {
+        alert("Please select slot");
+        return false;
+    }
+
+    navigator.geolocation.getCurrentPosition(function(position) {
+        form.latitude.value = position.coords.latitude;
+        form.longitude.value = position.coords.longitude;
+
+        form.removeAttribute("onsubmit"); // ✅ allow normal submit
+        form.submit();
+    });
+
+    return false;
 }

@@ -13,9 +13,10 @@
     <div class="sidebar">
         <h2>⚡ E-service</h2>
         <ul>
-            <li class="active">Dashboard</li>
-            <li>Calendar</li>
-            <li><a href="/users">Users</a></li>
+            <li><a href="/dashboard" class="menu-item active">Dashboard</a></li>
+            <li><a href="/users" class="menu-item">Users</a></li>
+            <li><a href="/technicians" class="menu-item">Technicians</a></li>
+            <li><a href="/booking" class="menu-item">Booking</a></li>
         </ul>
     </div>
 
@@ -50,33 +51,206 @@
             </div>
         </div>
 
-        <h2>Today's Schedule</h2>
+        {% if page != "booking" %}
 
-        <!-- Cards -->
-        <div class="cards">
-            <div class="card">
-                <h3>Total Today</h3>
-                <p id="total">0</p>
-            </div>
+<h2>Today's Schedule</h2>
 
-            <div class="card">
-                <h3>Confirmed</h3>
-                <p id="confirmed">0</p>
-            </div>
+<div class="cards">
+    <div class="card">
+        <h3>Total Today</h3>
+        <p id="total">0</p>
+    </div>
 
-            <div class="card">
-                <h3>Pending</h3>
-                <p id="pending">0</p>
-            </div>
-        </div>
+    <div class="card">
+        <h3>Confirmed</h3>
+        <p id="confirmed">0</p>
+    </div>
 
-        <!-- Bookings -->
-        <div class="bookings" id="bookingList"></div>
+    <div class="card">
+        <h3>Pending</h3>
+        <p id="pending">0</p>
+    </div>
+</div>
+
+<button onclick="openRoleModal()" class="add-btn">+ Add</button>
+
+{% endif %}
+
+<div id="roleModal" class="modal">
+    <div class="modal-content">
+        <h3>Select Type</h3>
+
+        <button onclick="goUser()" class="save-btn">User</button>
+        <button onclick="goTech()" class="edit-btn">Technician</button>
+
+        <button onclick="closeRoleModal()" class="cancel-btn">Cancel</button>
+    </div>
+</div>
+
+  {% if page == "booking" %}
+
+  {% if request.args.get('success') %}
+<div style="background:green;color:white;padding:10px;border-radius:8px;">
+    ✅ Booking Confirmed!
+</div>
+{% endif %}
+
+<div class="booking-wrapper">
+
+<!-- LEFT SIDE -->
+<div class="booking-left">
+
+<!-- SERVICE CARD -->
+<div class="service-card">
+    <img src="https://via.placeholder.com/80" class="service-img">
+    <div>
+        <h3>Electrical Service</h3>
+        <p>Professional electrical service at your location</p>
+        <small>₹500 • 30 minutes</small>
+    </div>
+</div>
+
+<!-- DATE HEADER -->
+<div class="calendar-header">
+    <span id="selectedDateText">Today</span>
+</div>
+
+<!-- DATE SELECTOR -->
+<div class="calendar-row">
+{% for d in days %}
+<div class="calendar-day {% if loop.index0 == 0 %}active{% endif %}"
+     onclick="selectDate(this, '{{d.date}}', '{{d.label}}')">
+    {{d.label}}
+</div>
+{% endfor %}
+</div>
+
+<!-- SLOT SECTIONS -->
+<p class="section-title">Morning</p>
+<div id="morningSlots" class="slot-grid"></div>
+
+<p class="section-title">Afternoon</p>
+<div id="afternoonSlots" class="slot-grid"></div>
+
+<p class="section-title">Evening</p>
+<div id="eveningSlots" class="slot-grid"></div>
+
+</div>
+
+<!-- RIGHT SIDE -->
+<!-- <div class="booking-right">
+
+<h3>Service Details</h3>
+
+<p><strong>Customer:</strong> {{user[0]}}</p>
+<p><strong>Email:</strong> {{user[1]}}</p>
+<p><strong>Phone:</strong> {{user[2]}}</p>
+
+<form action="/book" method="post" onsubmit="return handleBooking(this)">
+
+<input type="hidden" name="slot_id" id="slot_id">
+<input type="hidden" name="latitude">
+<input type="hidden" name="longitude">
+<input type="hidden" name="booking_date" id="booking_date">
+
+<textarea name="address" placeholder="Enter Address">{{user[3]}}</textarea>
+
+<button type="submit" class="confirm-btn">Confirm Booking</button>
+
+</form>
+
+</div> -->
+<div class="booking-right">
+
+<h3>Service Details</h3>
+
+<p><strong>Name:</strong> {{user[0]}}</p>
+<p><strong>Email:</strong> {{user[1]}}</p>
+<p><strong>Phone:</strong> {{user[2]}}</p>
+<p><strong>Address:</strong> {{user[3]}}</p>
+
+<p><strong>Location:</strong></p>
+<!-- <div id="map" style="height:150px;background:#eee;border-radius:10px;"></div> -->
+<div id="map" style="height:200px;border-radius:10px;"></div>
+<p><strong>Selected Slot:</strong> <span id="selectedSlotText">None</span></p>
+<p><strong>Time Left:</strong> <span id="timer">--</span></p>
+
+<form action="/book" method="post" onsubmit="return handleBooking(this)">
+
+<input type="hidden" name="slot_id" id="slot_id">
+<input type="hidden" name="latitude" id="latitude">
+<input type="hidden" name="longitude" id="longitude">
+<input type="hidden" name="booking_date" id="booking_date">
+
+<textarea name="address" placeholder="Enter Address">{{user[3]}}</textarea>
+
+<textarea name="remarks" placeholder="Enter Remarks"></textarea>
+
+<button type="submit" class="confirm-btn">Confirm Booking</button>
+
+</form>
+
+</div>
+</div>
+
+{% endif %}
+
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_REAL_API_KEY"></script>
+
+<script>
+function initMap(lat, lng) {
+
+    let location = { lat: lat, lng: lng };
+
+    let map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 14,
+        center: location,
+    });
+
+    new google.maps.Marker({
+        position: location,
+        map: map,
+    });
+}
+
+navigator.geolocation.getCurrentPosition(function(pos) {
+
+    let lat = pos.coords.latitude;
+    let lng = pos.coords.longitude;
+
+    document.getElementById("latitude").value = lat;
+    document.getElementById("longitude").value = lng;
+
+    initMap(lat, lng);
+});
+</script>
+
+<p><strong>Technician ETA:</strong> <span id="travelInfo">--</span></p>
+
 
     </div>
 </div>
 
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+<div id="successPopup" class="modal">
+    <div class="success-box">
+
+        <div class="success-icon">✔</div>
+
+        <h2>Application Successful!</h2>
+
+        <p>
+            Technician details have been submitted successfully.<br>
+            The information has been saved in the system.
+        </p>
+
+        <button onclick="closeSuccessPopup()" class="confirm-btn">Confirm</button>
+        <br><br>
+        <button onclick="closeSuccessPopup()" class="cancel-btn">Close</button>
+
+    </div>
+</div>
 
 </body>
 </html>

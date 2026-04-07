@@ -1,0 +1,45 @@
+<h2>All Bookings</h2>
+
+<table border="1">
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Date</th>
+<th>Slot</th>
+<th>Status</th>
+<th>Technician</th>
+<th>Update</th>
+<th>Active</th>
+</tr>
+
+{% for b in bookings %}
+<tr>
+<td>{{b[0]}}</td>
+<td>{{b[1]}}</td>
+<td>{{b[2]}}</td>
+<td>{{b[3]}}</td>
+<td>{{b[4]}}</td>
+<td>{{b[5]}}</td>
+
+<td>
+<form action="/update-status" method="post">
+<input type="hidden" name="id" value="{{b[0]}}">
+<select name="status">
+<option>Pending</option>
+<option>InProgress</option>
+<option>Completed</option>
+</select>
+<button>Update</button>
+</form>
+</td>
+
+<td>
+<form action="/toggle-tech" method="post">
+<input type="hidden" name="tech_id" value="{{b[5]}}">
+<button>Toggle</button>
+</form>
+</td>
+
+</tr>
+{% endfor %}
+</table>

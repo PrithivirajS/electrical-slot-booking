@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Technician Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f6fa;
+            padding: 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #4b2aad;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .pending { background: orange; }
+        .completed { background: green; }
+    </style>
+</head>
+<body>
+
+<h2>📋 My Assigned Bookings</h2>
+
+<table>
+<tr>
+    <th>Booking ID</th>
+    <th>Customer</th>
+    <th>Date</th>
+    <th>Slot</th>
+    <th>Status</th>
+</tr>
+
+{% for b in bookings %}
+<tr>
+    <td>{{b[0]}}</td>
+    <td>{{b[1]}}</td>
+    <td>{{b[2]}}</td>
+    <td>{{b[3]}}</td>
+    <td>
+        <span class="status {{b[4]|lower}}">
+            {{b[4]}}
+        </span>
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+</body>
+</html>

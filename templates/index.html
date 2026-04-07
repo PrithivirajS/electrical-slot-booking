@@ -3,12 +3,28 @@
 <head>
 <title>Electrical Slot Booking</title>
 <link rel="stylesheet" href="/static/style.css">
+
+<style>
+    input, textarea {
+        width: 95%;
+        padding: 5px;
+        margin: 3px 0;
+    }
+    button {
+        padding: 6px 10px;
+        background-color: green;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+</style>
+
 </head>
 <body>
 
 <h2>Available Electrical Slots</h2>
 
-<table>
+<table border="1">
 <tr>
 <th>Date</th>
 <th>Time</th>
@@ -22,18 +38,68 @@
 <td>{{slot[2]}}</td>
 <td>{{slot[3]}}</td>
 <td>
+
 <form action="/book" method="post">
+
+<!-- SLOT -->
 <input type="hidden" name="slot_id" value="{{slot[0]}}">
+
+<!-- USER DETAILS -->
 <input type="text" name="name" placeholder="Name" required>
 <input type="email" name="email" placeholder="Email" required>
 <input type="text" name="phone" placeholder="Phone" required>
+
+<!-- NEW FIELDS -->
+<textarea name="address" placeholder="Enter Address" required></textarea>
+
+<input type="date" name="booking_date" required>
+
+<!-- LOCATION -->
+<input type="hidden" name="latitude" id="lat_{{slot[0]}}">
+<input type="hidden" name="longitude" id="lng_{{slot[0]}}">
+
+<!-- MAP PREVIEW -->
+<div style="margin:5px 0;">
+    <iframe
+        id="map_{{slot[0]}}"
+        width="100%"
+        height="150"
+        style="border:0;"
+        loading="lazy"
+        src="https://maps.google.com/maps?q=13.0827,80.2707&z=15&output=embed">
+    </iframe>
+</div>
+
 <button type="submit">Book</button>
+
 </form>
+
 </td>
 </tr>
 {% endfor %}
 
 </table>
+
+<!-- GPS SCRIPT -->
+<script>
+function setLocation(lat, lng, slotId) {
+    document.getElementById("lat_" + slotId).value = lat;
+    document.getElementById("lng_" + slotId).value = lng;
+
+    document.getElementById("map_" + slotId).src =
+        "https://maps.google.com/maps?q=" + lat + "," + lng + "&z=15&output=embed";
+}
+
+// Get location once and apply to all rows
+navigator.geolocation.getCurrentPosition(function(position) {
+    let lat = position.coords.latitude;
+    let lng = position.coords.longitude;
+
+    {% for slot in slots %}
+        setLocation(lat, lng, "{{slot[0]}}");
+    {% endfor %}
+});
+</script>
 
 </body>
 </html>
