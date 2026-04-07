@@ -598,3 +598,42 @@ a.edit-btn {
     cursor: pointer;
     width: 100%;
 }
+
+
+
+/* ===== LIGHT BUTTONS ===== */
+
+.btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+/* LIGHT BLUE EDIT */
+.edit-btn {
+    background: #93c5fd;
+    color: #010614;
+}
+
+.edit-btn:hover {
+    background: #8abceb;
+}
+
+/* LIGHT RED DELETE */
+.delete-btn {
+    background: #e7a9a9;
+    color: #010614;
+}
+
+.delete-btn:hover {
+    background: #f87171;
+}
+
+/* LIGHT GREEN ADD */
+.add-btn {
+    background: #eb6168;
+    color: #020202;
+}
+

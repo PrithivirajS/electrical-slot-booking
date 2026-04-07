@@ -1,170 +1,163 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Technicians</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
-</head>
+{% extends "base.html" %}
 
-<body>
+{% block title %}Technicians{% endblock %}
 
-<div class="container">
+{% block content %}
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h2>⚡ E-service</h2>
-        <ul>
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/users">Users</a></li>
-            <li class="active">Technicians</li>
-            <li><a href="/technician/bookings">My Jobs</a></li>
-        </ul>
+<div style="display:flex; justify-content:space-between;">
+    <h2>Technician Management</h2>
+    <button onclick="openModal()" class="add-btn">+ Add Technician</button>
+</div>
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Area / Village</th>
+                <th>Status</th>
+                <th>Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for t in technicians %}
+        <tr>
+            <td>{{ t[0] }}</td>
+            <td>{{ t[1] or '-' }}</td>
+            <td>{{ t[2] or '-' }}</td>
+            <td>{{ t[6] or '-' }}</td>
+            <td>{{ t[16] }}</td>
+
+            <td>
+                <button onclick="toggleTech({{ t[0] }})">
+                    {{ 'Active' if t[17] == 1 else 'Inactive' }}
+                </button>
+            </td>
+
+            <td>
+                <button onclick="viewTech({{ t[0] }})">👁️ View</button>
+                <button onclick="editTech({{ t[0] }})" class="edit-btn">✏️ Edit</button>
+                <button onclick="deleteTech({{ t[0] }})" class="delete-btn">🗑️ Delete</button>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ================= MODAL ================= -->
+<div id="techModal" class="modal">
+    <div class="modal-content" style="width:650px;">
+
+        <form id="techForm" enctype="multipart/form-data">
+
+        <div class="modal-body">
+
+            <h2>Technician Onboarding</h2>
+
+            <!-- BASIC -->
+            <h3>Basic Information</h3>
+            <input type="text" name="name" placeholder="Full Name" required>
+            <input type="text" name="phone1" placeholder="Phone Number" required>
+            <input type="text" name="phone2" placeholder="Alternate Phone">
+            <input type="date" name="dob">
+            <select name="marital_status">
+                <option>Marital Status</option>
+                <option>Single</option>
+                <option>Married</option>
+            </select>
+            <input type="text" name="emergency_contact" placeholder="Emergency Contact">
+
+            <!-- ADDRESS -->
+            <h3>Address</h3>
+            <input type="text" name="flat" placeholder="Flat / Door No">
+            <input type="text" name="street" placeholder="Street">
+            <input type="text" name="post" placeholder="Post">
+            <input type="text" name="taluk" placeholder="Taluk">
+            <input type="text" name="district" placeholder="District">
+            <input type="text" name="pincode" placeholder="Pincode">
+
+            <!-- ID -->
+            <h3>Identity Verification</h3>
+            <select name="govtType">
+                <option>Aadhaar</option>
+                <option>PAN</option>
+                <option>Passport</option>
+                <option>Driving License</option>
+                <option>Voter ID</option>
+            </select>
+            <input type="text" name="govtNumber" placeholder="ID Number">
+
+            <!-- EDUCATION -->
+            <h3>Education</h3>
+            <input type="text" name="education" placeholder="Education">
+            <input type="text" name="experience" placeholder="Experience">
+            <textarea name="skills" placeholder="Skills"></textarea>
+
+            <!-- BANK -->
+            <h3>Bank Details</h3>
+            <input type="text" name="account_name" placeholder="Account Name">
+            <input type="text" name="account_number" placeholder="Account Number">
+            <input type="text" name="ifsc" placeholder="IFSC Code">
+            <input type="text" name="bank_name" placeholder="Bank Name">
+
+            <!-- FILES -->
+            <h3>Documents</h3>
+            <label>Resume</label>
+            <input type="file" name="resume">
+
+            <label>Photo</label>
+            <input type="file" name="photo">
+
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" onclick="saveTechnician()" class="save-btn">Submit</button>
+            <button type="button" onclick="closeModal()" class="cancel-btn">Cancel</button>
+        </div>
+
+        </form>
     </div>
+</div>
 
-    <!-- Main -->
-    <div class="main">
-
-        <!-- Header -->
-        <div style="display:flex; justify-content:space-between;">
-            <h2>Technician Management</h2>
-            <button onclick="openModal()" class="add-btn">+ Add Technician</button>
-        </div>
-
-        <!-- Table -->
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Phone</th>
-                        <th>Education</th>
-                        <th>Status</th>
-                        <th>Active</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                {% for t in technicians %}
-                <tr>
-                    <td>{{ t[0] }}</td>
-                    <td>{{ t[1] or '-' }}</td>
-                    <td>{{ t[2] or '-' }}</td>
-                    <td>{{ t[10] or '-' }}</td>
-                    <td>{{ t[16] }}</td>
-
-                    <!-- Active Toggle -->
-                    <td>
-                        <button onclick="toggleTech({{ t[0] }})">
-                            {{ 'Active' if t[17] == 1 else 'Inactive' }}
-                        </button>
-                    </td>
-
-                    <!-- Actions -->
-                    <td>
-                        <button onclick="viewTech({{ t[0] }})">👁️</button>
-                        <button onclick="editTech({{ t[0] }})" class="edit-btn">✏️</button>
-                        <button onclick="deleteTech({{ t[0] }})" class="delete-btn">🗑️</button>
-                    </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Modal -->
-        <div id="techModal" class="modal">
-            <div class="modal-content">
-
-                <form id="techForm" enctype="multipart/form-data">
-
-                <div class="modal-body">
-
-                    <h3>Add / Edit Technician</h3>
-
-                    <input type="hidden" name="id" id="tech_id">
-
-                    <input type="text" name="name" placeholder="Name">
-                    <input type="text" name="guardian" placeholder="Guardian">
-
-                    <input type="text" name="phone1" placeholder="Phone 1">
-                    <input type="text" name="phone2" placeholder="Phone 2">
-
-                    <input type="text" name="flat" placeholder="Flat / Door No">
-                    <input type="text" name="street" placeholder="Street">
-                    <input type="text" name="post" placeholder="Post">
-                    <input type="text" name="taluk" placeholder="Taluk">
-                    <input type="text" name="district" placeholder="District">
-                    <input type="text" name="pincode" placeholder="Pincode">
-
-                    <input type="text" name="education" placeholder="Education">
-
-                    <select name="govtType">
-                        <option>Aadhaar</option>
-                        <option>PAN</option>
-                        <option>Voter ID</option>
-                    </select>
-
-                    <input type="text" name="govtNumber" placeholder="ID Number">
-
-                    <label>Resume (PDF)</label>
-                    <input type="file" name="resume">
-
-                    <label>Photo</label>
-                    <input type="file" name="photo">
-
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" onclick="saveTechnician()" class="save-btn">Save</button>
-                    <button type="button" onclick="closeModal()" class="cancel-btn">Cancel</button>
-                </div>
-
-                </form>
-
-            </div>
-        </div>
-
-        <!-- Success Popup -->
-        <div id="successPopup" class="modal">
-            <div class="success-box">
-                <div class="success-icon">✔</div>
-                <h3>Success!</h3>
-                <button onclick="closeSuccessPopup()" class="confirm-btn">OK</button>
-            </div>
-        </div>
-
+<!-- SUCCESS POPUP -->
+<div id="successPopup" class="modal">
+    <div class="success-box">
+        <div class="success-icon">✔</div>
+        <h3>Success!</h3>
+        <button onclick="closeSuccessPopup()" class="confirm-btn">OK</button>
     </div>
 </div>
 
 <script>
 
-// MODAL
+// OPEN MODAL
 function openModal() {
     document.getElementById("techModal").style.display = "block";
 }
 
+// CLOSE MODAL
 function closeModal() {
     document.getElementById("techModal").style.display = "none";
 }
 
-// ADD / UPDATE
+// SAVE
 function saveTechnician() {
 
     let form = document.getElementById("techForm");
     let formData = new FormData(form);
 
-    let id = document.getElementById("tech_id").value;
-    let url = id ? "/update-technician" : "/add_technician";
-
-    fetch(url, {
+    fetch("/add_technician", {
         method: "POST",
         body: formData
     })
     .then(res => res.json())
     .then(data => {
-
-        if (data.status === "success" || data.status === "updated") {
+        if (data.status === "success") {
             closeModal();
             document.getElementById("successPopup").style.display = "block";
         } else {
@@ -173,25 +166,9 @@ function saveTechnician() {
     });
 }
 
-// EDIT
-function editTech(id) {
-    fetch(`/get-technician/${id}`)
-    .then(res => res.json())
-    .then(data => {
-
-        openModal();
-
-        document.getElementById("tech_id").value = data.id;
-        document.querySelector('[name="name"]').value = data.name;
-        document.querySelector('[name="phone1"]').value = data.phone1;
-        document.querySelector('[name="street"]').value = data.street;
-    });
-}
-
 // DELETE
 function deleteTech(id) {
-
-    if (!confirm("Delete this technician?")) return;
+    if (!confirm("Delete technician?")) return;
 
     fetch("/delete-technician", {
         method: "POST",
@@ -201,9 +178,8 @@ function deleteTech(id) {
     .then(() => location.reload());
 }
 
-// TOGGLE ACTIVE
+// TOGGLE
 function toggleTech(id) {
-
     fetch("/toggle-technician", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -214,16 +190,10 @@ function toggleTech(id) {
 
 // VIEW
 function viewTech(id) {
-
     fetch(`/get-technician/${id}`)
     .then(res => res.json())
     .then(data => {
-
-        alert(`
-Name: ${data.name}
-Phone: ${data.phone1}
-Street: ${data.street}
-        `);
+        alert(`Name: ${data.name}\nPhone: ${data.phone1}`);
     });
 }
 
@@ -235,5 +205,4 @@ function closeSuccessPopup() {
 
 </script>
 
-</body>
-</html>
+{% endblock %}

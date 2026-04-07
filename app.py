@@ -8,6 +8,7 @@ import os
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import math
+from collections import defaultdict
 
 
 
@@ -180,87 +181,6 @@ def reset_password(email):
     return render_template("reset_password.html")
 
 
-from datetime import datetime, timedelta
-
-# @app.route("/booking")
-# @login_required
-# def booking_page():
-
-#     # Generate next 10 days slots
-#     slots = []
-
-#     for i in range(10):
-#         date = (datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d")
-
-#         for hour in range(9, 21):  # 9 AM to 9 PM
-#             time = f"{hour}:00"
-#             slots.append({
-#                 "date": date,
-#                 "time": time
-#             })
-
-#     # Get booked slots
-#     cur = mysql.connection.cursor()
-#     cur.execute("SELECT slot_id, booking_date FROM bookings")
-#     booked = cur.fetchall()
-
-#     booked_set = {(str(b[1]), str(b[0])) for b in booked}
-
-#     # Get user
-#     cur.execute("SELECT name, email, phone, address FROM users WHERE id=%s", (session['user_id'],))
-#     user = cur.fetchone()
-
-#     return render_template("dashboard.html",
-#                            page="booking",
-#                            slots=slots,
-#                            booked=booked_set,
-#                            user=user)
-
-from collections import defaultdict
-from datetime import datetime, timedelta
-
-from datetime import datetime, timedelta
-
-from datetime import datetime, timedelta
-
-@app.route("/booking")
-@login_required
-def booking_page():
-
-    days = []
-
-    for i in range(10):
-        date_obj = datetime.now() + timedelta(days=i)
-        date_str = date_obj.strftime("%Y-%m-%d")
-
-        if i == 0:
-            label = "Today"
-        elif i == 1:
-            label = "Tomorrow"
-        else:
-            label = date_obj.strftime("%a %d")
-
-        days.append({
-            "label": label,
-            "date": date_str
-        })
-
-    # ✅ Get logged-in user
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT name, email, phone, address 
-        FROM users 
-        WHERE id=%s
-    """, (session['user_id'],))
-
-    user = cur.fetchone()
-
-    return render_template(
-        "dashboard.html",
-        page="booking",
-        days=days,
-        user=user
-    )
 
 @app.route("/get-booked-slots")
 @login_required
@@ -277,69 +197,7 @@ def get_booked_slots():
     slots = [row[0] for row in data]
 
     return jsonify(slots)
-# @app.route("/book", methods=["POST"])
-# @login_required
-# def book():
 
-#     name = request.form.get('name')
-#     email = request.form.get('email')
-#     phone = request.form.get('phone')
-#     address = request.form.get('address')
-#     remarks = request.form.get('remarks')
-#     latitude = request.form.get('latitude')
-#     longitude = request.form.get('longitude')
-#     slot_id = request.form.get('slot_id')
-#     booking_date = request.form.get('booking_date')
-
-#     cur = mysql.connection.cursor()
-
-#     # 🚫 Prevent duplicate booking
-#     cur.execute("""
-#         SELECT id FROM bookings
-#         WHERE booking_date=%s AND slot_id=%s
-#     """, (booking_date, slot_id))
-
-#     if cur.fetchone():
-#         return "❌ Slot already booked!"
-
-#     # 👤 Get user
-#     user_id = session['user_id']
-
-#     tech_id = get_nearest_technician(float(latitude), float(longitude), booking_date, slot_id)
-
-
-#     # ✅ Insert booking
-#     cur.execute("""
-#         INSERT INTO bookings(user_id, slot_id, booking_date, payment_status)
-#         VALUES(%s,%s,%s,%s)
-#     """, (user_id, slot_id, booking_date, "Pending"))
-
-#     mysql.connection.commit()
-
-#     # 📧 SEND EMAIL
-#     try:
-#         msg = Message(
-#             "Booking Confirmed",
-#             sender=app.config['MAIL_USERNAME'],
-#             recipients=[email]
-#         )
-
-#         msg.body = f"""
-# Hello {name},
-
-# Your booking is confirmed.
-
-# Date: {booking_date}
-# Slot: {slot_id}
-
-# Thank you!
-#         """
-
-#         mail.send(msg)
-#     except Exception as e:
-#         print("Mail Error:", e)
-
-#     return redirect("/booking?success=1")
 
 import requests  # 🔥 ADD THIS
 
@@ -510,20 +368,6 @@ def admin_data():
         "bookings": bookings
     })
 
-# Dashboard profile
-# @app.route("/admin/profile")
-# @admin_required
-# def admin_profile():
-#     user_id = session['user_id']
-
-#     cur = mysql.connection.cursor()
-#     cur.execute("SELECT name, email FROM users WHERE id=%s", (user_id,))
-#     user = cur.fetchone()
-
-#     return jsonify({
-#         "name": user[0],
-#         "email": user[1]
-#     })
 
 @app.route("/admin/profile")
 @admin_required
@@ -651,13 +495,11 @@ def update_user():
     data = request.get_json()
 
     user_id = data['id']
-    phone = data['phone']
-    role = data['role']
 
     cur = mysql.connection.cursor()
     cur.execute(
-        "UPDATE users SET phone=%s, role=%s WHERE id=%s",
-        (phone, role, user_id)
+        "UPDATE users SET name=%s, email=%s, phone=%s, role=%s WHERE id=%s",
+        (data['name'], data['email'], data['phone'], data['role'], user_id)
     )
     mysql.connection.commit()
 
@@ -702,23 +544,30 @@ def add_user():
 
     return {"status": "success"}
 
-@app.route("/admin/bookings")
-@admin_required
-def admin_bookings():
+
+from datetime import datetime, timedelta
+
+@app.route("/booking")
+@login_required
+def booking():
 
     cur = mysql.connection.cursor()
 
+    # USER
     cur.execute("""
-        SELECT b.id, u.name, b.booking_date, b.slot_id, b.payment_status
-        FROM bookings b
-        JOIN users u ON b.user_id = u.id
-        ORDER BY b.id DESC
-    """)
+        SELECT name, email, phone, address
+        FROM users WHERE id=%s
+    """, (session['user_id'],))
+    user = cur.fetchone()
 
-    bookings = cur.fetchall()
+    # 🔥 GENERATE NEXT 7 DAYS
+    days = []
+    for i in range(7):
+        d = datetime.now() + timedelta(days=i)
+        days.append(d.strftime("%Y-%m-%d"))
 
-    return render_template("admin_bookings.html", bookings=bookings)
-
+    return render_template("booking.html", user=user, days=days)
+    
 @app.route("/update-status", methods=["POST"])
 def update_status():
 
@@ -733,7 +582,7 @@ def update_status():
 
     mysql.connection.commit()
 
-    return redirect("/admin/bookings")
+    return redirect("//booking")
 
 import math
 
@@ -741,108 +590,7 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     return math.sqrt((lat1 - lat2)**2 + (lon1 - lon2)**2)
 
 
-# def get_nearest_technician(user_lat, user_lon, booking_date, slot_id):
 
-#     cur = mysql.connection.cursor()
-
-#     # Get available technicians
-#     cur.execute("SELECT id, latitude, longitude FROM technician WHERE status='Available'")
-#     techs = cur.fetchall()
-
-#     nearest = None
-#     min_dist = float("inf")
-
-#     for t in techs:
-#         tech_id, lat, lon = t
-
-#         # ❌ check if already booked at same time
-#         cur.execute("""
-#             SELECT id FROM bookings
-#             WHERE technician_id=%s AND booking_date=%s AND slot_id=%s
-#         """, (tech_id, booking_date, slot_id))
-
-#         if cur.fetchone():
-#             continue  # busy
-
-#         dist = calculate_distance(user_lat, user_lon, lat, lon)
-
-#         if dist < min_dist:
-#             min_dist = dist
-#             nearest = tech_id
-
-#     return nearest
-
-
-
-# def get_nearest_technician(user_lat, user_lon, booking_date, slot_id):
-
-#     cur = mysql.connection.cursor()
-
-#     # ✅ ONLY ACTIVE TECHNICIANS
-#     cur.execute("""
-#         SELECT id, latitude, longitude 
-#         FROM technician 
-#         WHERE status='Available' AND active=1
-#     """)
-#     techs = cur.fetchone()
-#     return tech[0] if tech else None
-# def get_nearest_technician(user_lat, user_lon, booking_date, slot_id):
-
-#     cur = mysql.connection.cursor()
-
-#     cur.execute("""
-#         SELECT id FROM technician 
-#         WHERE status='Available' AND active=1
-#         LIMIT 1
-#     """)
-
-#     tech = cur.fetchone()
-
-#     return tech[0] if tech else None
-#     best_tech = None
-#     min_time = float("inf")
-# def get_nearest_technician(user_lat, user_lon, booking_date, slot_id):
-
-#     cur = mysql.connection.cursor()
-
-#     cur.execute("""
-#         SELECT id FROM technician 
-#         WHERE status='Available' AND active=1
-#         LIMIT 1
-#     """)
-
-#     tech = cur.fetchone()
-
-#     return tech[0] if tech else None
-
-
-#     for tech in techs:
-#         tech_id, lat, lon = tech
-
-#         # ❌ skip busy technician
-#         cur.execute("""
-#             SELECT id FROM bookings
-#             WHERE technician_id=%s AND booking_date=%s AND slot_id=%s
-#         """, (tech_id, booking_date, slot_id))
-
-#         if cur.fetchone():
-#             continue
-
-#         # ✅ GOOGLE MAP DISTANCE API
-#         url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={user_lat},{user_lon}&destinations={lat},{lon}&key=YOUR_API_KEY"
-
-#         res = requests.get(url).json()
-
-#         try:
-#             duration = res['rows'][0]['elements'][0]['duration']['value']
-#         except:
-#             continue
-
-#         if duration < min_time:
-#             min_time = duration
-#             best_tech = tech_id
-
-#     return best_tech
 
 def get_nearest_technician(user_lat, user_lon, booking_date, slot_id):
 
@@ -899,7 +647,7 @@ def toggle_tech():
 
     mysql.connection.commit()
 
-    return redirect("/admin/bookings")
+    return redirect("/booking")
 
 @app.route("/update-tech-location", methods=["POST"])
 def update_location():

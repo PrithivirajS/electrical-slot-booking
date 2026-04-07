@@ -1,167 +1,115 @@
+// SAFE ELEMENT GETTER
+function el(id) {
+    return document.getElementById(id);
+}
+
 // ============================
 // DASHBOARD DATA
 // ============================
 function loadDashboard() {
+    if (!el("total")) return;
+
     fetch('/admin/data')
     .then(res => res.json())
     .then(data => {
-
-        document.getElementById("total").innerText = data.total;
-        document.getElementById("confirmed").innerText = data.confirmed;
-        document.getElementById("pending").innerText = data.pending;
+        el("total").innerText = data.total || 0;
+        el("confirmed").innerText = data.confirmed || 0;
+        el("pending").innerText = data.pending || 0;
 
         let html = "";
-
         data.bookings.forEach(b => {
             html += `
             <div class="booking">
                 <strong>${b.time}</strong> - ${b.name}
                 <span class="status ${b.status.toLowerCase()}">${b.status}</span>
-            </div>
-            `;
+            </div>`;
         });
 
-        document.getElementById("bookingList").innerHTML = html;
-    });
-}
-
-// ============================
-// PROFILE DATA
-// ============================
-function loadProfile() {
-    fetch('/admin/profile')
-    .then(res => res.json())
-    .then(data => {
-
-        document.getElementById("username").innerText = data.name;
-        document.getElementById("email").innerText = data.email;
-
-        let names = data.name.split(" ");
-        let initials = names.length > 1
-            ? names[0][0] + names[1][0]
-            : names[0][0];
-
-        initials = initials.toUpperCase();
-
-        if (data.image) {
-            document.getElementById("profileBtn").innerHTML =
-                `<img src="/static/uploads/${data.image}" class="profile-img">`;
-        } else {
-            document.getElementById("initial").innerText = initials;
+        if (el("bookingList")) {
+            el("bookingList").innerHTML = html;
         }
     });
 }
 
 // ============================
-// DROPDOWN
+// PROFILE
 // ============================
-const btn = document.getElementById("profileBtn");
-const dropdown = document.getElementById("profileDropdown");
+function loadProfile() {
+    if (!el("initial")) return;
 
-if (btn) {
-    btn.onclick = () => {
-        dropdown.style.display =
-            dropdown.style.display === "block" ? "none" : "block";
-    };
+    fetch('/admin/profile')
+    .then(res => res.json())
+    .then(data => {
+        let names = data.name.split(" ");
+        let initials = names.length > 1
+            ? names[0][0] + names[1][0]
+            : names[0][0];
+
+        el("initial").innerText = initials.toUpperCase();
+    });
 }
 
-window.onclick = function(e) {
-    if (!e.target.closest('.profile-container')) {
-        dropdown.style.display = "none";
-    }
+// ============================
+// INIT (ONLY ONE)
+// ============================
+window.onload = function () {
+    loadDashboard();
+    loadProfile();
+
+    const first = document.querySelector(".calendar-day");
+    if (first) first.click();
 };
 
 // ============================
-// INIT
+// PROFILE DROPDOWN
 // ============================
-loadDashboard();
-loadProfile();
+document.addEventListener("click", function(e) {
+    const btn = el("profileBtn");
+    const dropdown = el("profileDropdown");
+
+    if (!btn || !dropdown) return;
+
+    if (btn.contains(e.target)) {
+        dropdown.style.display =
+            dropdown.style.display === "block" ? "none" : "block";
+    } else {
+        dropdown.style.display = "none";
+    }
+});
 
 // ============================
-// SLOT BOOKING UI (FINAL FIX)
+// SLOT BOOKING
 // ============================
-
 let selectedSlot = null;
 
-// Format time
 function formatTime(hour) {
     let ampm = hour >= 12 ? "PM" : "AM";
-    let h = hour % 12;
-    if (h === 0) h = 12;
+    let h = hour % 12 || 12;
     return h + ":00 " + ampm;
 }
 
-// Generate slots
-// function generateSlots(date) {
-
-//     console.log("Generating slots for:", date);
-
-//     document.getElementById("morningSlots").innerHTML = "";
-//     document.getElementById("afternoonSlots").innerHTML = "";
-//     document.getElementById("eveningSlots").innerHTML = "";
-
-//     for (let hour = 9; hour < 21; hour++) {
-
-//         let start = formatTime(hour);
-//         let end = formatTime(hour + 1);
-
-//         let slotText = `${start} - ${end}`;
-
-//         let btn = document.createElement("button");
-//         btn.className = "slot-btn";
-//         btn.innerText = slotText;
-
-//         btn.onclick = function () {
-
-//             if (selectedSlot) selectedSlot.classList.remove("selected");
-
-//             btn.classList.add("selected");
-//             selectedSlot = btn;
-
-//             document.getElementById("slot_id").value = slotText;
-//             document.getElementById("booking_date").value = date;
-//         };
-
-//         // Grouping
-//         if (hour < 12) {
-//             document.getElementById("morningSlots").appendChild(btn);
-//         } else if (hour < 17) {
-//             document.getElementById("afternoonSlots").appendChild(btn);
-//         } else {
-//             document.getElementById("eveningSlots").appendChild(btn);
-//         }
-//     }
-// }
-
 function generateSlots(date) {
-
     fetch(`/get-booked-slots?date=${date}`)
     .then(res => res.json())
     .then(bookedSlots => {
 
-        document.getElementById("morningSlots").innerHTML = "";
-        document.getElementById("afternoonSlots").innerHTML = "";
-        document.getElementById("eveningSlots").innerHTML = "";
+        ["morningSlots","afternoonSlots","eveningSlots"].forEach(id => {
+            if (el(id)) el(id).innerHTML = "";
+        });
 
         for (let hour = 9; hour < 21; hour++) {
-
-            let start = formatTime(hour);
-            let end = formatTime(hour + 1);
-
-            let slotText = `${start} - ${end}`;
-
+            let slotText = `${formatTime(hour)} - ${formatTime(hour+1)}`;
             let btn = document.createElement("button");
+
             btn.className = "slot-btn";
             btn.innerText = slotText;
 
-            // 🚫 DISABLE BOOKED SLOT
             if (bookedSlots.includes(slotText)) {
                 btn.classList.add("disabled");
                 btn.disabled = true;
             }
 
             btn.onclick = function () {
-
                 if (btn.classList.contains("disabled")) return;
 
                 if (selectedSlot) selectedSlot.classList.remove("selected");
@@ -169,179 +117,52 @@ function generateSlots(date) {
                 btn.classList.add("selected");
                 selectedSlot = btn;
 
-                document.getElementById("slot_id").value = hour;
-                document.getElementById("booking_date").value = date;
+                if (el("slot_id")) el("slot_id").value = hour;
+                if (el("booking_date")) el("booking_date").value = date;
+                if (el("selectedSlotText")) el("selectedSlotText").innerText = slotText;
 
-                document.getElementById("selectedSlotText").innerText = slotText;
-
-                startTimer(300); // 5 mins
+                startTimer(300);
             };
 
-            if (hour < 12) {
-                document.getElementById("morningSlots").appendChild(btn);
-            } else if (hour < 17) {
-                document.getElementById("afternoonSlots").appendChild(btn);
-            } else {
-                document.getElementById("eveningSlots").appendChild(btn);
-            }
+            if (hour < 12 && el("morningSlots")) el("morningSlots").appendChild(btn);
+            else if (hour < 17 && el("afternoonSlots")) el("afternoonSlots").appendChild(btn);
+            else if (el("eveningSlots")) el("eveningSlots").appendChild(btn);
         }
     });
 }
 
-// Date select
-// function selectDate(el, date) {
-
-//     console.log("Date clicked:", date);
-
-//     document.querySelectorAll(".date-card").forEach(d => d.classList.remove("active"));
-//     el.classList.add("active");
-
-//     generateSlots(date);
-// }
-
-function selectDate(el, date, label) {
-
-    document.querySelectorAll(".calendar-day").forEach(d => d.classList.remove("active"));
-    el.classList.add("active");
-
-    document.getElementById("selectedDateText").innerText = label;
-
-    generateSlots(date);
-}
-
-// Auto load
-window.onload = function () {
-
-    console.log("Page loaded");
-
-    const first = document.querySelector(".calendar-day");
-
-    if (first) {
-        first.click();
-    } else {
-        console.error("Date tabs not found");
-    }
-};
-
-
+// ============================
+// TIMER
+// ============================
 let timerInterval;
 
 function startTimer(seconds) {
-
     clearInterval(timerInterval);
 
     timerInterval = setInterval(() => {
         let min = Math.floor(seconds / 60);
         let sec = seconds % 60;
 
-        document.getElementById("timer").innerText =
-            `${min}:${sec < 10 ? '0' : ''}${sec}`;
+        if (el("timer")) {
+            el("timer").innerText = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+        }
 
         if (seconds <= 0) {
             clearInterval(timerInterval);
-            alert("⏰ Slot expired! Please reselect.");
+            alert("⏰ Slot expired!");
         }
 
         seconds--;
     }, 1000);
 }
 
-navigator.geolocation.getCurrentPosition(function(pos) {
-    document.getElementById("latitude").value = pos.coords.latitude;
-    document.getElementById("longitude").value = pos.coords.longitude;
-
-    document.getElementById("map").innerHTML =
-        `Lat: ${pos.coords.latitude} <br> Long: ${pos.coords.longitude}`;
-});
-
-
-setInterval(() => {
-
-    const active = document.querySelector(".calendar-day.active");
-
-    if (active) {
-        active.click();
-    }
-
-}, 30000);
-
-function showDistance(userLat, userLng, techLat, techLng) {
-
-    let service = new google.maps.DistanceMatrixService();
-
-    service.getDistanceMatrix({
-        origins: [{lat: userLat, lng: userLng}],
-        destinations: [{lat: techLat, lng: techLng}],
-        travelMode: 'DRIVING'
-    }, function(response) {
-
-        let data = response.rows[0].elements[0];
-
-        document.getElementById("travelInfo").innerText =
-            data.distance.text + " | " + data.duration.text;
-    });
-}
-
-function updateDistance(userLat, userLng) {
-
-    fetch("/get-tech-location")
-    .then(res => res.json())
-    .then(data => {
-
-        if (!data) return;
-
-        showDistance(userLat, userLng, data.lat, data.lng);
-    });
-}
-
-function openRoleModal() {
-    document.getElementById("roleModal").style.display = "block";
-}
-
-function closeRoleModal() {
-    document.getElementById("roleModal").style.display = "none";
-}
-
-function goUser() {
-    window.location.href = "/users";
-}
-
-function goTech() {
-    window.location.href = "/technicians";
-}
-
+// ============================
+// TECHNICIAN MODULE
+// ============================
 function addTechnician() {
 
+    let form = document.getElementById("techForm");  // ✅ FIXED ORDER
     let formData = new FormData(form);
-    let form = document.getElementById("techForm");
-
-    formData.append("name", document.getElementById("name").value);
-    formData.append("guardian", document.getElementById("guardian").value);
-    formData.append("phone1", document.getElementById("phone1").value);
-    formData.append("phone2", document.getElementById("phone2").value);
-
-    formData.append("flat", document.getElementById("flat").value);
-    formData.append("street", document.getElementById("street").value);
-    formData.append("post", document.getElementById("post").value);
-    formData.append("taluk", document.getElementById("taluk").value);
-    formData.append("district", document.getElementById("district").value);
-    formData.append("pincode", document.getElementById("pincode").value);
-
-    formData.append("education", document.getElementById("education").value);
-    formData.append("experience", document.getElementById("experience").value);
-
-    formData.append("govtType", document.getElementById("govtType").value);
-    formData.append("govtNumber", document.getElementById("govtNumber").value);
-
-    formData.append("rating", document.getElementById("rating").value);
-    formData.append("review", document.getElementById("review").value);
-
-    // FILES
-    let resume = document.getElementById("resume").files[0];
-    let photo = document.getElementById("photo").files[0];
-
-    if (resume) formData.append("resume", resume);
-    if (photo) formData.append("photo", photo);
 
     fetch("/add_technician", {
         method: "POST",
@@ -349,51 +170,104 @@ function addTechnician() {
     })
     .then(res => res.json())
     .then(data => {
-        console.log(data);
-
         if (data.status === "success") {
-            closeModal();        // close form
-            showSuccessPopup();  // show popup
+            closeModal();
+            showSuccessPopup();
         } else {
             alert(data.error);
         }
     });
 }
 
-function showSuccessPopup() {
-    document.getElementById("successPopup").style.display = "block";
+// ============================
+// USER MODULE
+// ============================
+function openUserModal() {
+    el("userModal").style.display = "block";
 }
 
-function closeSuccessPopup() {
-    document.getElementById("successPopup").style.display = "none";
-    location.reload(); // optional refresh
+function closeUserModal() {
+    el("userModal").style.display = "none";
 }
 
-function editTech(id) {
-    fetch(`/get-technician/${id}`)
+function editUser(id, name, email, phone, role) {
+    el("user_id").value = id;
+    el("user_name").value = name;
+    el("user_email").value = email;
+    el("user_phone").value = phone;
+    el("user_role").value = role;
+
+    openUserModal();
+}
+
+function saveUser() {
+    let id = el("user_id").value;
+
+    let data = {
+        id,
+        name: el("user_name").value,
+        email: el("user_email").value,
+        phone: el("user_phone").value,
+        role: el("user_role").value
+    };
+
+    fetch(id ? "/update-user" : "/add-user", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    })
     .then(res => res.json())
     .then(data => {
-
-        openModal();
-
-        document.querySelector('[name="name"]').value = data.name;
-        document.querySelector('[name="phone1"]').value = data.phone1;
-        document.querySelector('[name="street"]').value = data.street;
-
-        document.getElementById("techForm").dataset.id = id;
+        if (data.status === "success") {
+            closeUserModal();
+            showSuccessPopup();
+        } else {
+            alert(data.error);
+        }
     });
 }
 
-function deleteTech(id) {
+function deleteUser(id) {
+    if (!confirm("Delete user?")) return;
 
-    if (!confirm("Are you sure?")) return;
-
-    fetch("/delete-technician", {
+    fetch("/delete-user", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({id: id})
+        body: JSON.stringify({id})
     })
     .then(() => location.reload());
+}
+
+// ============================
+// SUCCESS POPUP
+// ============================
+function showSuccessPopup() {
+    if (el("successPopup")) {
+        el("successPopup").style.display = "block";
+    }
+}
+
+function closeSuccessPopup() {
+    if (el("successPopup")) {
+        el("successPopup").style.display = "none";
+    }
+    location.reload();
+}
+
+// ================= BOOKING =================
+let selectedDiv = null;
+
+function selectSlot(elm, id, date, time) {
+
+    if (selectedDiv) {
+        selectedDiv.classList.remove("active-slot");
+    }
+
+    elm.classList.add("active-slot");
+    selectedDiv = elm;
+
+    el("slot_id").value = id;
+    el("selectedSlot").innerText = date + " " + time;
 }
 
 function handleBooking(form) {
@@ -406,8 +280,6 @@ function handleBooking(form) {
     navigator.geolocation.getCurrentPosition(function(position) {
         form.latitude.value = position.coords.latitude;
         form.longitude.value = position.coords.longitude;
-
-        form.removeAttribute("onsubmit"); // ✅ allow normal submit
         form.submit();
     });
 
