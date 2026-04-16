@@ -1,9 +1,11 @@
-body{
-font-family: Arial;
-background:#f4f4f4;
-text-align:center;
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #eef2f3, #dfe9f3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
 }
-
 table{
 margin:auto;
 border-collapse:collapse;
@@ -19,4 +21,111 @@ background:green;
 color:white;
 border:none;
 padding:8px;
+}
+
+
+/* Container */
+.login-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Card */
+.login-card {
+    width: 380px;
+    background: #fff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* Logo */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.logo-icon {
+    background: #3a58ef;
+    color: white;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+/* Subtitle */
+.subtitle {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* Inputs */
+label {
+    font-size: 13px;
+    margin-top: 10px;
+    display: block;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+input:focus {
+    border-color: #0f766e;
+    outline: none;
+}
+
+/* Password */
+.password-wrapper {
+    position: relative;
+}
+
+.eye {
+    position: absolute;
+    right: 10px;
+    top: 35%;
+    cursor: pointer;
+}
+
+/* Button */
+button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    background: #132476;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Links */
+.links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.links a {
+    font-size: 13px;
+    color: #0f766e;
+    text-decoration: none;
+}
+
+/* Error */
+.error-msg {
+    background: #ffe5e5;
+    color: #d8000c;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 13px;
 }

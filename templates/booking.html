@@ -1,57 +1,118 @@
 {% extends "base.html" %}
+{% block title %}Booking{% endblock %}
+
 {% block content %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='booking.css') }}">
 
-<div class="booking-wrapper">
+<div class="booking-container">
 
-    <!-- LEFT -->
-    <div class="left">
+    {% if request.args.get('success') %}
 
-        <div class="service-box">
-            <h3>Electrical Service ⚡</h3>
-            <p>Professional electrical service at your location</p>
-            <p><b>₹500 • 30 minutes</b></p>
+<div class="success-card">
+    <h2>🎉 Booking Confirmed!</h2>
+
+    <p><b>Booking ID:</b> {{ request.args.get('code') }}</p>
+    <p><b>Customer:</b> {{ request.args.get('name') }}</p>
+
+    <p class="thank-you">Thank you for choosing our service ⚡</p>
+</div>
+
+{% endif %}
+
+    <!-- LEFT PANEL -->
+    <div class="booking-left">
+
+        <!-- SERVICE CARD -->
+        <div class="service-card">
+            <div>
+                <h3>{{ selected_service[1] }} ⚡</h3>
+                <p>Professional service at your doorstep</p>
+                <span class="price">₹{{ selected_service[2] }} • 30 mins</span>
+            </div>
         </div>
 
-        <!-- DATES -->
-        <div class="dates">
-            {% for d in days %}
-                <button class="date-btn" onclick="loadSlots('{{d}}', this)">
-                    {{d}}
-                </button>
-            {% endfor %}
+        <!-- DATE -->
+        <div class="date-wrapper">
+            <button type="button" onclick="loadDates(-7)">‹</button>
+            <div id="dateContainer" class="date-scroll"></div>
+            <button type="button" onclick="loadDates(7)">›</button>
         </div>
 
-        <!-- SLOT CONTAINER -->
+        <!-- SLOT -->
         <div id="slotsContainer"></div>
 
     </div>
 
-    <!-- RIGHT -->
-    <div class="right">
+    <!-- RIGHT PANEL -->
+    <div class="booking-right">
 
-        <h3>Service Details</h3>
+        <h3>Booking Summary</h3>
 
-        <p><b>Name:</b> {{user[0]}}</p>
-        <p><b>Email:</b> {{user[1]}}</p>
-        <p><b>Phone:</b> {{user[2]}}</p>
-
-        <hr>
-
-        <p><b>Selected Slot:</b> <span id="selectedSlot">None</span></p>
-        <p><b>Time Left:</b> <span id="timer">--</span></p>
-
+        <!-- 🔥 SINGLE FORM (ALL DATA INSIDE) -->
         <form method="POST" action="/book" onsubmit="return submitForm(this)">
 
+            <!-- ================= HIDDEN FIELDS ================= -->
+            <input type="hidden" name="service_id" value="{{ selected_service[0] }}">
+            <input type="hidden" name="technician_id" id="technician_id">
             <input type="hidden" name="slot_id" id="slot_id">
             <input type="hidden" name="booking_date" id="booking_date">
-            <input type="hidden" name="latitude">
-            <input type="hidden" name="longitude">
+            <input type="hidden" name="selected_time" id="selectedTime">
 
-            <textarea name="remarks" placeholder="Enter remarks"></textarea>
+            <input type="hidden" name="name" id="cust_name">
+            <input type="hidden" name="phone" id="cust_phone">
+            <input type="hidden" name="email" id="cust_email">
+            <input type="hidden" name="city" id="cust_city">
 
-            <button class="btn">Confirm Booking</button>
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="longitude" id="longitude">
+
+            <!-- ================= TECHNICIAN ================= -->
+            <div class="tech-card">
+                <h4>Technician Details</h4>
+
+                <input type="text" id="techSearch" placeholder="Search technician name or mobile">
+
+                <select id="techDropdown" onchange="loadTechnicianDetails(this.value)">
+                    <option value="">Select Technician</option>
+                </select>
+
+                <div id="techResults" class="tech-results"></div>
+
+                <div id="techDetails"></div>
+
+                <button type="button" onclick="clearTechnician()" class="clear-btn">
+                    ❌ Clear Technician
+                </button>
+            </div>
+
+            <!-- ================= CUSTOMER ================= -->
+            <div class="customer-card">
+
+                <h4>Customer Details</h4>
+
+                <input type="text" id="customerSearch" placeholder="Search customer name or mobile">
+
+                <div id="customerResults" class="tech-results"></div>
+
+                <div id="customerPreview" class="tech-profile" style="display:none;"></div>
+
+                <button type="button" onclick="clearCustomer()" class="clear-btn">
+                    ❌ Clear Customer
+                </button>
+
+            </div>
+
+            <!-- ================= SUMMARY ================= -->
+            <div class="summary-box">
+                <p><b>Slot:</b> <span id="selectedSlot">None</span></p>
+                <p><b>Time Left:</b> <span id="timer">--</span></p>
+            </div>
+
+            <!-- ================= BUTTON ================= -->
+            <button class="book-btn" id="bookBtn" disabled>
+                Confirm Booking
+            </button>
 
         </form>
 
@@ -59,6 +120,10 @@
 
 </div>
 
+<div id="toast" class="toast">✅ Booking Confirmed</div>
+
+{% block extra_js %}
 <script src="{{ url_for('static', filename='booking.js') }}"></script>
+{% endblock %}
 
 {% endblock %}

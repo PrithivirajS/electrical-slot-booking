@@ -1,0 +1,221 @@
+/* =========================
+   HERO SECTION
+========================= */
+.hero {
+    background: linear-gradient(135deg,#1e1b4b,#4c1d95);
+    color: white;
+    text-align: center;
+    padding: 60px;
+    border-radius: 20px;
+}
+
+.hero h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.search-box {
+    margin-top: 20px;
+}
+
+.search-box input {
+    padding: 12px;
+    width: 350px;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+}
+
+.search-box button {
+    padding: 12px 20px;
+    background: orange;
+    border: none;
+    border-radius: 10px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* =========================
+   SERVICES
+========================= */
+.services {
+    margin-top: 30px;
+}
+
+/* FILTER BUTTONS */
+.filters {
+    margin: 15px 0;
+}
+
+.filters button {
+    padding: 8px 15px;
+    margin-right: 10px;
+    border-radius: 20px;
+    border: none;
+    background: #eee;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.filters button:hover {
+    background: #ddd;
+}
+
+.filters .active {
+    background: #1e1b4b;
+    color: white;
+}
+
+/* =========================
+   GRID LAYOUT
+========================= */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+/* =========================
+   CARD (FINAL FIXED)
+========================= */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    transition: 0.3s;
+
+    /* ✅ CRITICAL FIX */
+    color: #111;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* ICON */
+.icon {
+    font-size: 24px;
+    background: #f3f4f6;
+    padding: 10px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+/* TITLE */
+.card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 5px;
+}
+
+/* DESCRIPTION */
+.card p {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+/* META (rating + bookings) */
+.meta {
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 10px;
+}
+
+/* PRICE + BUTTON */
+.bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bottom span {
+    font-weight: bold;
+    color: #4f46e5;
+}
+
+/* BUTTON */
+.bottom button {
+    padding: 8px 15px;
+    border: none;
+    background: linear-gradient(135deg,#6366f1,#7c3aed);
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.bottom button:hover {
+    opacity: 0.9;
+}
+
+/* =========================
+   SEARCH (LIVE)
+========================= */
+.search-live {
+    padding: 10px;
+    width: 250px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+}
+
+/* =========================
+   SKELETON LOADING
+========================= */
+.skeleton {
+    animation: pulse 1.5s infinite;
+}
+
+.sk-box {
+    height: 40px;
+    background: #eee;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.sk-line {
+    height: 12px;
+    background: #eee;
+    margin-bottom: 8px;
+}
+
+.sk-line.small {
+    width: 60%;
+}
+
+@keyframes pulse {
+    0% {opacity: 0.6;}
+    50% {opacity: 1;}
+    100% {opacity: 0.6;}
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media(max-width: 1024px){
+    .cards {
+        grid-template-columns: repeat(2,1fr);
+    }
+}
+
+@media(max-width: 600px){
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .search-box input {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .search-box button {
+        width: 100%;
+        margin-left: 0;
+    }
+}

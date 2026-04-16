@@ -1,27 +1,88 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <meta charset="UTF-8">
+    <title>SecurePortal Login</title>
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='static/style.css') }}"> -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-<div class="auth-container">
-    <div class="auth-box">
-        <h2><u>Login</u></h2>
+<div class="login-container">
+    <div class="login-card">
 
-        <form method="post">
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
+        <!-- Logo -->
+        <div class="logo">
+            <div class="logo-icon">⚡</div>
+            <span> E-service</span>
+        </div>
 
-            <button type="submit">Login</button>
+        <h2>Welcome back</h2>
+        <p class="subtitle">Sign in with your credentials to access the dashboard.</p>
+
+        <!-- ERROR MESSAGE -->
+        {% if error %}
+        <div class="error-msg">{{ error }}</div>
+        {% else %}
+        <div id="error-msg" class="error-msg"></div>
+        {% endif %}
+
+        <form method="post" id="loginForm">
+
+            <label>Email</label>
+            <input type="email" name="email" id="email" placeholder="Enter your email" required>
+
+            <label>Password</label>
+            <div class="password-wrapper">
+                <input type="password" name="password" id="password" placeholder="Enter your password" required>
+                <span id="togglePassword" class="eye">👁</span>
+            </div>
+
+            <button type="submit">Sign In</button>
         </form>
 
-        <h3><a href="/register">Create Account</a></h3>
-        <h4><a href="/forgot-password"> <u>Forgot Password?</u></a></h4>
+        <div class="links">
+            <a href="/register">Create Account</a>
+            <a href="/forgot-password">Forgot Password?</a>
+        </div>
+
     </div>
 </div>
+
+
+<script>
+/* 👁 Toggle Password */
+const password = document.getElementById("password");
+const togglePassword = document.getElementById("togglePassword");
+
+togglePassword.addEventListener("click", () => {
+    if (password.type === "password") {
+        password.type = "text";
+        togglePassword.textContent = "🙈";
+    } else {
+        password.type = "password";
+        togglePassword.textContent = "👁";
+    }
+});
+
+/* Optional: Frontend validation (without reload) */
+const form = document.getElementById("loginForm");
+const errorMsg = document.getElementById("error-msg");
+
+if(form){
+    form.addEventListener("submit", function(e){
+        const email = document.getElementById("email").value;
+        const pass = password.value;
+
+        if(!email || !pass){
+            e.preventDefault();
+            errorMsg.style.display = "block";
+            errorMsg.innerText = "⚠ Please fill all fields";
+        }
+    });
+}
+</script>
 
 </body>
 </html>

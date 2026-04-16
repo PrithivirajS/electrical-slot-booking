@@ -9,23 +9,94 @@
 
 <div class="container">
 
-    <!-- Sidebar (COMMON) -->
+    <!-- Sidebar -->
     <div class="sidebar">
-        <h2>⚡ E-service</h2>
+        <h2 onclick="goDashboard()" style="cursor:pointer;">⚡ E-service</h2>
         <ul>
+            <li><a href="/home" class="menu-item">Home</a></li>
             <li><a href="/dashboard" class="menu-item">Dashboard</a></li>
             <li><a href="/users" class="menu-item">Users</a></li>
             <li><a href="/technicians" class="menu-item">Technicians</a></li>
             <li><a href="/booking" class="menu-item">Booking</a></li>
+            <li><a href="/customers" class="menu-item">Customers</a></li>
         </ul>
     </div>
 
-    <!-- Dynamic Content -->
+    <!-- Main -->
     <div class="main">
-        {% block content %}{% endblock %}
-    </div>
 
+        <!-- TOPBAR -->
+        <div class="topbar-pro">
+
+            <div class="topbar-left">
+                <h3>Welcome, {{ user_name }}</h3>
+            </div>
+
+            <div class="topbar-right">
+
+                <div class="notification">
+                    🔔 <span class="badge">3</span>
+                </div>
+
+                <div class="profile-dropdown">
+
+                    <div class="profile-box" id="profileBtn">
+                        <div class="profile-circle" id="initial">PS</div>
+                        <div class="profile-name">{{ user_name }}</div>
+                    </div>
+
+                    <div class="dropdown-menu-pro" id="profileDropdown">
+                        <div class="dropdown-header">{{ user_name }}</div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">Profile</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout" onclick="openLogoutModal()">Logout</a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- PAGE CONTENT -->
+        {% block content %}{% endblock %}
+
+    </div>
 </div>
+
+<!-- LOGOUT MODAL -->
+<div id="logoutModal" class="modal">
+    <div class="modal-content">
+        <h3>⚠ Session Expired</h3>
+        <p>Your session has ended securely.</p>
+        <button onclick="confirmLogout()" class="confirm-btn">
+            Conform to logout
+        </button>
+    </div>
+</div>
+
+<!-- LIVE CLOCK -->
+<div class="live-time" id="liveTime"></div>
+
+<!-- JS -->
+<!-- <script src="{{ url_for('static', filename='dashboard.js') }}"></script> -->
+
+{% block extra_js %}{% endblock %}
+
+<script>
+function goDashboard(){
+    window.location.href = "/dashboard";
+}
+
+function openLogoutModal(){
+    document.getElementById("logoutModal").style.display = "block";
+}
+
+function confirmLogout(){
+    window.currentUser = null;
+    window.location.href = "/logout";
+}
+</script>
 
 </body>
 </html>

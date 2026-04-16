@@ -17,24 +17,23 @@
 
 <div class="cards">
 
-    <div class="card">
-        <h3>Total Today</h3>
+    <div class="card gradient-blue">
+        <h4>Total Bookings</h4>
         <p id="total">0</p>
     </div>
 
-    <div class="card">
-        <h3>Booking Confirmed</h3>
+    <div class="card gradient-green">
+        <h4>Confirmed</h4>
         <p id="confirmed">0</p>
     </div>
 
-    <div class="card">
-        <h3>Pending</h3>
+    <div class="card gradient-orange">
+        <h4>Pending</h4>
         <p id="pending">0</p>
     </div>
-
-    <div class="card">
-        <h3>Completed</h3>
-        <p id="completed">0</p>
+    <div class="card gradient-yellow">
+        <h4>Completed</h4>
+        <p id="pending">0</p>
     </div>
 
 </div>
@@ -42,6 +41,10 @@
 <!-- Booking List -->
 <div id="bookingList" class="bookings"></div>
 
+<!-- <script src="{{ url_for('static', filename='dashboard.js') }}"></script> -->
+
+{% block extra_js %}
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+{% endblock %}
 
 {% endblock %}

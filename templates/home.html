@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+
+<!-- HERO -->
+<div class="hero">
+    <h1>Expert Electrical Services,<br>One Click Away</h1>
+    <p>Licensed electricians at your doorstep</p>
+
+    <div class="search-box">
+        <input type="text" placeholder="Search services...">
+        <button>Search</button>
+    </div>
+</div>
+
+<!-- SERVICES -->
+<div class="services">
+
+    <h2>Our Services</h2>
+
+    <!-- FILTER -->
+    <div class="filters">
+        <button onclick="filterService('All')" class="active">All</button>
+        <button onclick="filterService('Installation')">Installation</button>
+        <button onclick="filterService('Wiring')">Wiring</button>
+        <button onclick="filterService('Lighting')">Lighting</button>
+        <button onclick="filterService('Repairs')">Repairs</button>
+        <button onclick="filterService('Safety')">Safety</button>
+    </div>
+
+<input type="text" id="searchInput" placeholder="Search services..." class="search-live">
+
+<div id="cardsContainer" class="cards"></div>
+
+
+</div>
+
+<script>
+function goBooking(){
+    window.location.href = "/booking";
+}
+</script>
+
+<script src="{{ url_for('static', filename='home.js') }}"></script>
+
+{% endblock %}
