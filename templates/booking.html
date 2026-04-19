@@ -9,14 +9,14 @@
 
     {% if request.args.get('success') %}
 
-<div class="success-card">
+<!-- <div class="success-card">
     <h2>🎉 Booking Confirmed!</h2>
 
     <p><b>Booking ID:</b> {{ request.args.get('code') }}</p>
     <p><b>Customer:</b> {{ request.args.get('name') }}</p>
 
     <p class="thank-you">Thank you for choosing our service ⚡</p>
-</div>
+</div> -->
 
 {% endif %}
 
@@ -73,11 +73,7 @@
 
                 <input type="text" id="techSearch" placeholder="Search technician name or mobile">
 
-                <select id="techDropdown" onchange="loadTechnicianDetails(this.value)">
-                    <option value="">Select Technician</option>
-                </select>
-
-                <div id="techResults" class="tech-results"></div>
+                 <div id="techResults" class="tech-results"></div>
 
                 <div id="techDetails"></div>
 

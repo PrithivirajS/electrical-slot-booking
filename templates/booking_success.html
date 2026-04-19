@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='booking_success.css') }}">
+
+
+<div class="booking-wrapper">
+
+    <div class="booking-panel">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h2>{{ booking[4] }}</h2>
+                <p class="date">Request Date: {{ booking[1] }}</p>
+
+                <div class="meta">
+                    <span><b>Customer:</b> {{ booking[6] }}</span>
+                    <span><b>Mobile:</b> {{ booking[7] }}</span>
+                    <span><b>Technician:</b> {{ booking[8] or "Not Assigned" }}</span>
+                </div>
+            </div>
+
+            <button class="cancel-btn">Cancel Request</button>
+        </div>
+
+        <!-- MAIN -->
+        <div class="booking-main">
+
+            <!-- LEFT SIDE (FULL CONTENT INSIDE ONE FLOW) -->
+            <div class="left">
+
+                <!-- BOOKING CONFIRM -->
+                <div class="card">
+                    <h3 class="success">✔ Booking Confirmed</h3>
+
+                    <div class="user-row">
+                        <div class="avatar">👤</div>
+                        <div>
+                            <p class="name">{{ booking[6] }}</p>
+                            <p class="sub">{{ booking[7] }}</p>
+                        </div>
+                    </div>
+
+                    <p class="info-text">
+                        Technician will be assigned 1 hour before the scheduled time
+                    </p>
+
+                    <div class="time-box">
+                        {{ booking[2] }} on {{ booking[1] }}
+                    </div>
+
+                    <button class="reschedule-btn">Re-schedule</button>
+                </div>
+
+                <!-- CHECKLIST -->
+                <div class="card small">
+                    <h4>Service Checklist</h4>
+                    <p>See what all you should know before service.</p>
+                </div>
+
+                <!-- HELP -->
+                <div class="card small">
+                    <h4>Need help?</h4>
+                    <p>Call support: +91 9876543210</p>
+                </div>
+
+            </div>
+
+            <!-- RIGHT SIDE -->
+            <div class="right">
+                <div class="payment">
+                    <h4>Payment Summary</h4>
+
+                    <div class="row">
+                        <span>Total</span>
+                        <span>₹{{ booking[5] }}</span>
+                    </div>
+
+                    <div class="row">
+                        <span>GST (18%)</span>
+                        <span>₹{{ (booking[5]*0.18)|int }}</span>
+                    </div>
+
+                    <div class="total">
+                        ₹{{ booking[5] + (booking[5]*0.18)|int }}
+                    </div>
+
+                    <button class="pay-btn">Pay Now</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

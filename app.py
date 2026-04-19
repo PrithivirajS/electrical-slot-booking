@@ -189,28 +189,72 @@ def reset_password(email):
 
 
 
+
+# @app.route("/get-booked-slots")
+# @login_required
+# def get_booked_slots():
+
+#     date = request.args.get("date")
+#     tech_id = request.args.get("technician_id")
+
+#     cur = mysql.connection.cursor()
+
+#     # 🚫 No technician → disable all slots
+#     if not tech_id:
+#         return jsonify(list(range(1, 13)))  # slots 1–12
+
+#     # ✅ Get booked slots for selected technician
+#     cur.execute("""
+#         SELECT slot_id FROM bookings
+#         WHERE booking_date=%s AND technician_id=%s
+#     """, (date, tech_id))
+
+#     data = cur.fetchall()
+#     slots = [row[0] for row in data]
+
+#     return jsonify(slots)
+
 @app.route("/get-booked-slots")
 @login_required
 def get_booked_slots():
+
     date = request.args.get("date")
+    tech_id = request.args.get("technician_id")
 
     cur = mysql.connection.cursor()
+
+    # 🔥 Get ALL slots with booking count
     cur.execute("""
-        SELECT slot_id FROM bookings WHERE booking_date=%s
-    """, (date,))
+        SELECT 
+            s.id,
+            s.slot_time,
+            s.max_capacity,
+            COUNT(b.id) as booked_count
+        FROM slots s
+        LEFT JOIN bookings b
+            ON s.id = b.slot_id
+            AND b.booking_date = %s
+            AND b.technician_id = %s
+        GROUP BY s.id
+        ORDER BY s.id
+    """, (date, tech_id if tech_id else 0))
 
     data = cur.fetchall()
 
-    slots = [row[0] for row in data]
+    result = []
+    for row in data:
+        result.append({
+            "id": row[0],
+            "time": row[1],
+            "capacity": row[2],
+            "booked": row[3]
+        })
 
-    return jsonify(slots)
+    return jsonify(result)
 
 
 def generate_booking_code(name):
-    prefix = "ELE"
-    name_part = (name[:3]).upper()
-    rand = random.randint(10000, 99999)
-    return f"{prefix}{name_part}{rand}"
+    return f"ELE{name[:3].upper()}{random.randint(10000,99999)}"
 
 
 @app.route("/book", methods=["POST"])
@@ -219,126 +263,119 @@ def book():
 
     cur = mysql.connection.cursor()
 
-    # ======================
-    # INPUTS
-    # ======================
+    name = request.form.get('name')
+    phone = request.form.get('phone')
+    slot_id = request.form.get('slot_id')
+    booking_date = request.form.get('booking_date')
+    tech_id = request.form.get('technician_id')
     service_id = request.form.get("service_id")
-    slot_id = request.form.get("slot_id")
-    booking_date = request.form.get("booking_date")
-    booking_time = request.form.get("selected_time")
 
-    customer_name = request.form.get("name")
-    customer_phone = request.form.get("phone")
+    user_id = session['user_id']
 
-    selected_tech_id = request.form.get("technician_id")
+    # ✅ VALIDATION
+    if not slot_id or not booking_date:
+        return "❌ Please select date and slot"
 
-    user_id = session['user_id']   # ✅ FIX
+    if not tech_id:
+        return "❌ Please select technician"
 
-    # ======================
-    # DEBUG
-    # ======================
-    print("DEBUG:", service_id, slot_id, booking_date,
-          booking_time, customer_name, customer_phone, selected_tech_id)
+    if not service_id:
+        return "❌ Service not selected"
 
-    # ======================
-    # VALIDATION
-    # ======================
-    missing = []
-
-    if not service_id: missing.append("service_id")
-    if not slot_id: missing.append("slot_id")
-    if not booking_date: missing.append("booking_date")
-    if not booking_time: missing.append("booking_time")
-    if not customer_name: missing.append("customer_name")
-    if not selected_tech_id: missing.append("technician_id")
-
-    if missing:
-        return f"❌ Missing fields: {', '.join(missing)}"
-
-    # ======================
-    # SLOT CHECK (CORRECT)
-    # ======================
+    # ✅ DUPLICATE CHECK (USER + SLOT + SERVICE)
     # cur.execute("""
     #     SELECT id FROM bookings
-    #     WHERE booking_date=%s 
-    #     AND booking_time=%s
-    #     AND technician_id=%s
-    # """, (booking_date, booking_time, selected_tech_id))
-
-    # if cur.fetchone():
-    #     return "❌ Slot already booked!"
+    #     WHERE user_id=%s
+    #     AND booking_date=%s
+    #     AND slot_id=%s
+    #     AND service_id=%s
+    # """, (user_id, booking_date, slot_id, service_id))
 
     cur.execute("""
-    SELECT id FROM bookings
-    WHERE booking_date=%s 
-    AND booking_time=%s
+    SELECT COUNT(*) 
+    FROM bookings
+    WHERE booking_date=%s
+    AND slot_id=%s
     AND technician_id=%s
-    """, (booking_date, booking_time, tech_id))
+""", (booking_date, slot_id, tech_id))
+
+    count = cur.fetchone()[0]
+
+    cur.execute("SELECT max_capacity FROM slots WHERE id=%s", (slot_id,))
+    capacity = cur.fetchone()[0]
 
     if cur.fetchone():
-        return "❌ This technician already has a booking for this slot!"
+        return "❌ Slot fully booked!"
 
-    # ======================
-    # CUSTOMER (GET OR CREATE)
-    # ======================
-    cur.execute("""
-        SELECT id FROM customers
-        WHERE mobile=%s
-    """, (customer_phone,))
+    # ✅ BOOKING CODE
+    booking_code = generate_booking_code(name)
 
-    cust = cur.fetchone()
-
-    if cust:
-        customer_id = cust[0]
-    else:
-        cur.execute("""
-            INSERT INTO customers(user_id, full_name, mobile)
-            VALUES(%s,%s,%s)
-        """, (user_id, customer_name, customer_phone))
-
-        mysql.connection.commit()
-        customer_id = cur.lastrowid
-
-    # ======================
-    # BOOKING CODE (ONLY ONCE)
-    # ======================
-    booking_code = generate_booking_code(customer_name)
-
-    print("BOOKING CODE:", booking_code)
-
-    # ======================
-    # INSERT BOOKING
-    # ======================
+    # ✅ INSERT
     cur.execute("""
         INSERT INTO bookings
-        (booking_code, user_id, customer_id, service_id,
-         slot_id, booking_date, booking_time,
-         technician_id, payment_status, created_at)
-        VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW())
+        (booking_code, user_id, slot_id, booking_date, payment_status, technician_id, service_id)
+        VALUES(%s,%s,%s,%s,%s,%s,%s)
     """, (
         booking_code,
         user_id,
-        customer_id,
-        service_id,
         slot_id,
         booking_date,
-        booking_time,
-        selected_tech_id,
-        "Pending"
+        "Pending",
+        tech_id,
+        service_id
     ))
 
     mysql.connection.commit()
 
-    # ======================
-    # REDIRECT WITH DATA
-    # ======================
-    # return redirect(
-    #     f"/booking?success=1&code={booking_code}&name={customer_name}"
-    # )
-    return redirect(
-    f"/booking?service_id={service_id}&success=1&code={booking_code}&name={customer_name}"
-    )
+    booking_id = cur.lastrowid
 
+    return redirect(f"/booking-success/{booking_id}")
+
+@app.route("/booking-success/<int:booking_id>")
+@login_required
+def booking_success(booking_id):
+
+    cur = mysql.connection.cursor()
+
+    # cur.execute("""
+    #     SELECT 
+    #         b.id,
+    #         b.booking_date,
+    #         s.slot_time,
+    #         b.payment_status,
+    #         sv.name,
+    #         sv.price
+    #     FROM bookings b
+    #     JOIN slots s ON b.slot_id = s.id
+    #     LEFT JOIN services sv ON b.service_id = sv.id
+    #     WHERE b.id=%s AND b.user_id=%s
+    # """, (booking_id, session['user_id']))
+
+    cur.execute("""
+        SELECT 
+            b.id,
+            b.booking_date,
+            s.slot_time,
+            b.payment_status,
+            sv.name,
+            sv.price,
+            u.name,
+            u.phone,
+            t.name
+        FROM bookings b
+        JOIN slots s ON b.slot_id = s.id
+        LEFT JOIN services sv ON b.service_id = sv.id
+        LEFT JOIN users u ON b.user_id = u.id
+        LEFT JOIN technician t ON b.technician_id = t.id
+        WHERE b.id=%s AND b.user_id=%s
+    """, (booking_id, session['user_id']))
+
+    data = cur.fetchone()
+
+    if not data:
+        return f"❌ Booking not found for user {session['user_id']}"
+
+    return render_template("booking_success.html", booking=data)
 
 @app.route("/get-tech-booked-slots")
 @login_required
@@ -350,15 +387,15 @@ def get_tech_booked_slots():
     cur = mysql.connection.cursor()
 
     cur.execute("""
-        SELECT booking_time FROM bookings
+        SELECT slot_id FROM bookings
         WHERE booking_date=%s AND technician_id=%s
     """, (date, tech_id))
 
     data = cur.fetchall()
 
-    times = [row[0] for row in data]
+    slots = [row[0] for row in data]
 
-    return jsonify(times)
+    return jsonify(slots)
 
 # Admin Page
 @app.route("/admin")
@@ -628,118 +665,6 @@ def add_user():
 
 from datetime import datetime, timedelta
 
-# @app.route("/booking")
-# @login_required
-# def booking():
-
-#     cur = mysql.connection.cursor()
-
-#     # USER
-#     cur.execute("""
-#         SELECT name, email, phone, address
-#         FROM users WHERE id=%s
-#     """, (session['user_id'],))
-#     user = cur.fetchone()
-
-#     # 🔥 GENERATE NEXT 7 DAYS
-#     days = []
-#     for i in range(7):
-#         d = datetime.now() + timedelta(days=i)
-#         days.append(d.strftime("%Y-%m-%d"))
-
-#     return render_template("booking.html", user=user, days=days)
-
-# @app.route("/booking")
-# @login_required
-# def booking():
-
-#     service_id = request.args.get("service_id")
-
-#     cur = mysql.connection.cursor()
-
-#     # USER
-#     cur.execute("""
-#         SELECT name, email, phone, address
-#         FROM users WHERE id=%s
-#     """, (session['user_id'],))
-#     user = cur.fetchone()
-
-#     # ✅ GET ALL SERVICES (for dropdown)
-#     cur.execute("SELECT id, name FROM services WHERE active=1")
-#     services = cur.fetchall()
-
-#     # ✅ SELECTED SERVICE
-#     selected_service = None
-#     if service_id:
-#         cur.execute("SELECT id, name FROM services WHERE id=%s", (service_id,))
-#         selected_service = cur.fetchone()
-
-#     # DAYS
-#     days = []
-#     from datetime import datetime, timedelta
-#     for i in range(7):
-#         d = datetime.now() + timedelta(days=i)
-#         days.append(d.strftime("%Y-%m-%d"))
-
-#     return render_template(
-#         "booking.html",
-#         user=user,
-#         days=days,
-#         services=services,
-#         selected_service=selected_service
-#     )
-
-# @app.route("/booking")
-# @login_required
-# def booking():
-
-#     service_id = request.args.get("service_id")
-
-#     cur = mysql.connection.cursor()
-
-#     selected_service = None
-
-#     if service_id:
-#         cur.execute("""
-#             SELECT id, name, price
-#             FROM services
-#             WHERE id=%s
-#         """, (service_id,))
-#         selected_service = cur.fetchone()
-
-#     return render_template(
-#         "booking.html",
-#         selected_service=selected_service
-#     )
-
-# @app.route("/booking")
-# @login_required
-# def booking():
-
-#     service_id = request.args.get("service_id")
-
-#     # ❌ BLOCK direct access
-#     if not service_id:
-#         return redirect("/home")   # or show error page
-
-#     cur = mysql.connection.cursor()
-
-#     cur.execute("""
-#         SELECT id, name, price
-#         FROM services
-#         WHERE id=%s
-#     """, (service_id,))
-
-#     selected_service = cur.fetchone()
-
-#     # ❌ INVALID SERVICE
-#     if not selected_service:
-#         return redirect("/home")
-
-#     return render_template(
-#         "booking.html",
-#         selected_service=selected_service
-#     )
 
 @app.route("/booking")
 @login_required
@@ -748,7 +673,7 @@ def booking():
     service_id = request.args.get("service_id")
 
     if not service_id:
-        return redirect("/home")   # ← this caused your issue
+        return "❌ Service ID missing"
 
     cur = mysql.connection.cursor()
 
@@ -977,18 +902,6 @@ ALLOWED_DOC_EXTENSIONS = {'pdf'}
 def allowed_file(filename, allowed_types):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_types
 
-# @app.route("/get-technician/<int:id>")
-# def get_technician(id):
-#     cur = mysql.connection.cursor()
-#     cur.execute("SELECT * FROM technician WHERE id=%s", (id,))
-#     t = cur.fetchone()
-
-#     return jsonify({
-#         "id": t[0],
-#         "name": t[1],
-#         "phone1": t[2],
-#         "street": t[5]
-#     })
 
 @app.route('/get-technician/<int:id>')
 def get_technician(id):
@@ -1181,42 +1094,6 @@ def customers():
         search=search
     )
 
-# @app.route("/add-customer", methods=["POST"])
-# @login_required
-# def add_customer():
-
-#     data = request.get_json()
-
-#     mobile = data['mobile']
-
-#     # ✅ Validation
-#     if not mobile.isdigit() or len(mobile) != 10:
-#         return {"error": "Invalid mobile"}
-
-#     cur = mysql.connection.cursor()
-
-#     cur.execute("""
-#         INSERT INTO customers
-#         (user_id, full_name, mobile, email, address, city, state,
-#          postal_code, landmark, latitude, longitude)
-#         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-#     """, (
-#         session['user_id'],
-#         data['full_name'],
-#         data['mobile'],
-#         data['email'],
-#         data['address'],
-#         data['city'],
-#         data['state'],
-#         data['postal'],
-#         data['landmark'],
-#         data['lat'],
-#         data['lng']
-#     ))
-
-#     mysql.connection.commit()
-
-#     return {"status": "success"}
 
 @app.route("/add-customer", methods=["POST"])
 @login_required
@@ -1366,15 +1243,13 @@ def get_services():
 
     return jsonify(result)
 
-def generate_booking_code(customer_name):
+import random
 
+def generate_booking_code(name):
     prefix = "ELE"
-
-    name_part = (customer_name[:3]).upper()
-
-    random_part = str(random.randint(10000, 99999))
-
-    return f"{prefix}{name_part}{random_part}"
+    name_part = (name[:3]).upper() if name else "USR"
+    rand = random.randint(10000, 99999)
+    return f"{prefix}{name_part}{rand}"
 
 
 # ---------------------------

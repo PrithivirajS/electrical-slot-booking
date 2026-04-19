@@ -103,28 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-// ================= DATE =================
-// function loadDates(offset = 0) {
-//     currentStart += offset;
 
-//     fetch(`/get-dates?start=${currentStart}`)
-//     .then(res => res.json())
-//     .then(days => {
-
-//         let container = document.getElementById("dateContainer");
-//         container.innerHTML = "";
-
-//         days.forEach(d => {
-//             container.innerHTML += `
-//                 <button class="date-btn" onclick="loadSlots('${d}', this)">
-//                     ${d}
-//                 </button>
-//             `;
-//         });
-
-//         document.querySelector(".date-btn")?.click();
-//     });
-// }
 
 function loadDates(offset = 0) {
     currentStart += offset;
@@ -182,111 +161,52 @@ function loadSlots(date, btn) {
     generateSlots(date);
 }
 
-// function generateSlots(date) {
-
-//     let container = document.getElementById("slotsContainer");
-//     container.innerHTML = "";
-
-//     let sections = {
-//         "Morning": [9, 12],
-//         "Afternoon": [12, 17],
-//         "Evening": [17, 21]
-//     };
-
-//     fetch(`/get-booked-slots?date=${date}`)
-//     .then(res => res.json())
-//     .then(booked => {
-
-//         let slotId = 1;
-
-//         for (let section in sections) {
-
-//             let [start, end] = sections[section];
-//             let html = `<h4>${section}</h4><div class="slots">`;
-
-//             for (let h = start; h < end; h++) {
-
-//                 let time = `${format(h)} - ${format(h+1)}`;
-//                 let disabled = booked.includes(slotId);
-
-//                 html += `
-//                     <div class="slot ${disabled ? 'disabled' : ''}"
-//                         onclick="selectSlot(this, ${slotId}, '${date}', '${time}')">
-//                         ${time}
-//                     </div>
-//                 `;
-
-//                 slotId++;
-//             }
-
-//             html += `</div>`;
-//             container.innerHTML += html;
-//         }
-
-//         // ✅ Auto-select first slot
-//         setTimeout(() => {
-//             let first = document.querySelector(".slot:not(.disabled)");
-//             if (first) first.click();
-//         }, 200);
-
-//     });
-// }
-
 
 function generateSlots(date) {
 
     let container = document.getElementById("slotsContainer");
     container.innerHTML = "";
 
-    let sections = {
-        "Morning": [9, 12],
-        "Afternoon": [12, 17],
-        "Evening": [17, 21]
-    };
+    let techId = document.getElementById("technician_id").value;
 
-    fetch(`/get-booked-slots?date=${date}`)
+    fetch(`/get-booked-slots?date=${date}&technician_id=${techId || ""}`)
     .then(res => res.json())
-    .then(booked => {
+    .then(slots => {
 
-        let slotId = 1;
+        let html = `<div class="slots">`;
 
-        for (let section in sections) {
+        slots.forEach(s => {
 
-            let [start, end] = sections[section];
+            // 🔥 Disable logic
+            let isDisabled = !techId || (s.booked >= s.capacity);
 
-            let html = `<div class="slot-section"><h4>${section}</h4><div class="slots">`;
-
-            for (let h = start; h < end; h++) {
-
-                let time = `${format(h)} - ${format(h+1)}`;
-                let isBooked = booked.includes(slotId);
-
-                // 🔥 OPTIONAL: Random "few left" demo (replace with real logic later)
-                let status = "";
-                if (!isBooked && Math.random() < 0.3) {
-                    status = `<div class="slot-status few">Few left</div>`;
-                }
-
-                if (isBooked) {
-                    status = `<div class="slot-status full">Full</div>`;
-                }
-
-                html += `
-                    <div class="slot-card ${isBooked ? 'disabled' : ''}"
-                        onclick="selectSlot(this, ${slotId}, '${date}', '${time}')">
-                        <span>${time}</span>
-                        ${status}
-                    </div>
-                `;
-
-                slotId++;
+            let status = "";
+            if (s.booked >= s.capacity) {
+                status = `<div class="slot-status full">Full</div>`;
+            } else if (s.capacity - s.booked <= 1) {
+                status = `<div class="slot-status few">Few left</div>`;
             }
 
-            html += `</div></div>`;
-            container.innerHTML += html;
+            html += `
+                <div class="slot ${isDisabled ? 'disabled' : ''}"
+                    onclick="selectSlot(this, ${s.id}, '${date}', '${s.time}')">
+                    ${s.time}
+                    ${status}
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        container.innerHTML = html;
+
+        // Auto select
+        if (techId) {
+            let first = document.querySelector(".slot:not(.disabled)");
+            if (first) first.click();
         }
     });
 }
+
 
 function format(h) {
     let ampm = h >= 12 ? "PM" : "AM";
@@ -305,13 +225,13 @@ function selectSlot(el, id, date, time) {
     document.getElementById("selectedSlot").innerText = `${date} | ${time}`;
 
     // 🔥 IMPORTANT FIX
+    // document.getElementById("selected_time").value = time;
     document.getElementById("selectedTime").value = time;
 }
 
 // ================= TECH =================
-function selectTech(id, name, phone) {
 
-    if (!name || name.length < 2) return;
+function selectTech(id, name, phone) {
 
     document.getElementById("technician_id").value = id;
     document.getElementById("techSearch").value = name;
@@ -326,7 +246,9 @@ function selectTech(id, name, phone) {
         </div>
     `;
 
-    checkBookingReady(); // ✅ ADD
+    // 🔥 IMPORTANT: reload slots
+    let date = document.getElementById("booking_date").value;
+    if (date) generateSlots(date);
 }
 
 
@@ -402,10 +324,21 @@ function editCustomer() {
 });
 
 // ================= FORM =================
+
 function submitForm(form) {
 
     if (!form.slot_id.value) {
         alert("Select slot");
+        return false;
+    }
+
+    if (!form.technician_id.value) {
+        alert("Select technician");
+        return false;
+    }
+
+    if (!form.name.value) {
+        alert("Select customer");
         return false;
     }
 

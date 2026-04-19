@@ -11,7 +11,7 @@
     <p>Licensed electricians at your doorstep</p>
 
     <div class="search-box">
-        <input type="text" placeholder="Search services...">
+        <input type="text" id="searchInput" placeholder="Search services..." class="search-live">
         <button>Search</button>
     </div>
 </div>
@@ -30,8 +30,6 @@
         <button onclick="filterService('Repairs')">Repairs</button>
         <button onclick="filterService('Safety')">Safety</button>
     </div>
-
-<input type="text" id="searchInput" placeholder="Search services..." class="search-live">
 
 <div id="cardsContainer" class="cards"></div>
 
