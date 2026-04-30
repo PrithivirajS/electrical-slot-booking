@@ -1,19 +1,11 @@
 {% extends "base.html" %}
-
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
 
-<!-- Topbar -->
-<div class="topbar">
-    <div class="profile-container">
-        <div class="profile-circle" id="profileBtn">
-            <span id="initial"></span>
-        </div>
-    </div>
-</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
 
-<h2>Today's Schedule</h2>
+<h2 class="page-title">Today's Schedule</h2>
 
 <div class="cards">
 
@@ -31,20 +23,21 @@
         <h4>Pending</h4>
         <p id="pending">0</p>
     </div>
+
     <div class="card gradient-yellow">
         <h4>Completed</h4>
-        <p id="pending">0</p>
+        <p id="completed">0</p>
     </div>
 
 </div>
 
-<!-- Booking List -->
-<div id="bookingList" class="bookings"></div>
+<!-- <div class="bookings">
+    <h3>Today's Bookings</h3>
+    <div id="bookingList"></div>
+</div> -->
 
-<!-- <script src="{{ url_for('static', filename='dashboard.js') }}"></script> -->
+{% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
-{% endblock %}
-
 {% endblock %}

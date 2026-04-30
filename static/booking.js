@@ -162,6 +162,199 @@ function loadSlots(date, btn) {
 }
 
 
+// function generateSlots(date) {
+
+//     let container = document.getElementById("slotsContainer");
+//     container.innerHTML = "";
+
+//     let techId = document.getElementById("technician_id").value;
+
+//     let url = techId
+//         ? `/get-tech-booked-slots?date=${date}&tech_id=${techId}`
+//         : `/get-slots?date=${date}`;
+
+//     fetch(url)
+//     .then(res => res.json())
+//     .then(data => {
+
+//         let html = `<div class="slots">`;
+
+//         data.forEach(s => {
+
+//             // ✅ Correct disable logic
+//             let isDisabled = techId ? s.is_full : s.booked;
+
+//             let statusText = isDisabled ? "Full" : "Available";
+//             let statusClass = isDisabled ? "full" : "available";
+
+//             html += `
+//                 <div class="slot-card ${isDisabled ? 'disabled' : ''}"
+//                      onclick="${isDisabled ? '' : `selectSlot(this, ${s.id}, '${date}', '${s.time}')`}">
+
+//                     <div class="time">${s.time}</div>
+
+//                     <span class="slot-status ${statusClass}">
+//                         ${statusText}
+//                     </span>
+
+//                 </div>
+//             `;
+//         });
+
+//         html += `</div>`;
+//         container.innerHTML = html;
+
+//         // auto select first available
+//         let first = document.querySelector(".slot-card:not(.disabled)");
+//         if (first) first.click();
+//     });
+// }
+
+// function generateSlots(date) {
+
+//     let container = document.getElementById("slotsContainer");
+//     container.innerHTML = "";
+
+//     let techId = document.getElementById("technician_id").value;
+
+//     if (!techId) {
+//         container.innerHTML = "<p>Select technician to view slots</p>";
+//         return;
+//     }
+
+//     fetch(`/get-tech-slots?date=${date}&tech_id=${techId}`)
+//     .then(res => res.json())
+//     .then(data => {
+
+//         let html = `<div class="slots">`;
+
+//         data.forEach(s => {
+
+//             let isDisabled = s.is_full;
+
+//             let statusText = isDisabled ? "Full" : "Available";
+//             let statusClass = isDisabled ? "full" : "available";
+
+//             html += `
+//                 <div class="slot-card ${isDisabled ? 'disabled' : ''}"
+//                      onclick="${isDisabled ? '' : `selectSlot(this, ${s.id}, '${date}', '${s.time}')`}">
+
+//                     <div class="time">${s.time}</div>
+
+//                     <span class="slot-status ${statusClass}">
+//                         ${statusText}
+//                     </span>
+
+//                 </div>
+//             `;
+//         });
+//         html += `</div>`;
+//         container.innerHTML = html;
+//     });
+// }
+
+// function generateSlots(date) {
+
+//     let container = document.getElementById("slotsContainer");
+//     container.innerHTML = "";
+
+//     let techId = document.getElementById("technician_id").value;
+
+//     fetch(`/get-slots?date=${date}&tech_id=${techId}`)
+//     .then(res => res.json())
+//     .then(slots => {
+
+//         let html = `<div class="slots">`;
+
+//         slots.forEach(s => {
+
+//             html += `
+//                 <div class="slot-card ${s.booked ? 'disabled' : ''}"
+//                     onclick="${s.booked ? '' : `selectSlot(this, ${s.id}, '${date}', '${s.time}')`}">
+
+//                     <div class="time">${s.time}</div>
+
+//                     <span class="slot-status ${s.booked ? 'full' : 'available'}">
+//                         ${s.booked ? 'Full' : 'Available'}
+//                     </span>
+
+//                 </div>
+//             `;
+//         });
+
+//         html += `</div>`;
+//         container.innerHTML = html;
+
+//     });
+// }
+
+// function generateSlots(date) {
+
+//     let container = document.getElementById("slotsContainer");
+//     container.innerHTML = "";
+
+//     let techId = document.getElementById("technician_id").value;
+
+//     fetch(`/get-slots?date=${date}&tech_id=${techId}`)
+//     .then(res => res.json())
+//     .then(slots => {
+
+//         let morning = [];
+//         let afternoon = [];
+//         let evening = [];
+
+//         // ✅ GROUPING LOGIC
+//         slots.forEach(s => {
+
+//             let hour = parseInt(s.time.split(":")[0]);
+
+//             if (hour < 12) {
+//                 morning.push(s);
+//             } else if (hour < 17) {
+//                 afternoon.push(s);
+//             } else {
+//                 evening.push(s);
+//             }
+//         });
+
+//         // ✅ BUILD SECTION FUNCTION
+//         function buildSection(title, data) {
+
+//             if (data.length === 0) return "";
+
+//             let html = `<div class="slot-section">
+//                             <h4>${title}</h4>
+//                             <div class="slots">`;
+
+//             data.forEach(s => {
+
+//                 html += `
+//                     <div class="slot-card ${s.booked ? 'disabled' : ''}"
+//                         onclick="${s.booked ? '' : `selectSlot(this, ${s.id}, '${date}', '${s.time}')`}">
+
+//                         <div class="time">${s.time}</div>
+
+//                         <span class="slot-status ${s.booked ? 'full' : 'available'}">
+//                             ${s.booked ? 'Full' : 'Available'}
+//                         </span>
+
+//                     </div>
+//                 `;
+//             });
+
+//             html += `</div></div>`;
+//             return html;
+//         }
+
+//         // ✅ FINAL UI
+//         container.innerHTML =
+//             buildSection("Morning", morning) +
+//             buildSection("Afternoon", afternoon) +
+//             buildSection("Evening", evening);
+
+//     });
+// }
+
 function generateSlots(date) {
 
     let container = document.getElementById("slotsContainer");
@@ -169,44 +362,89 @@ function generateSlots(date) {
 
     let techId = document.getElementById("technician_id").value;
 
-    fetch(`/get-booked-slots?date=${date}&technician_id=${techId || ""}`)
+    fetch(`/get-slots?date=${date}&tech_id=${techId}`)
     .then(res => res.json())
     .then(slots => {
 
-        let html = `<div class="slots">`;
+        let groups = {
+            "Morning": [],
+            "Afternoon": [],
+            "Evening": []
+        };
 
         slots.forEach(s => {
 
-            // 🔥 Disable logic
-            let isDisabled = !techId || (s.booked >= s.capacity);
+            // extract starting hour safely
+            let hour = parseInt(s.time.split(":")[0]);
 
-            let status = "";
-            if (s.booked >= s.capacity) {
-                status = `<div class="slot-status full">Full</div>`;
-            } else if (s.capacity - s.booked <= 1) {
-                status = `<div class="slot-status few">Few left</div>`;
+            // 🔥 FIX for 12 → 01 issue (PM wrap)
+            if (s.time.includes("01:00") && !s.time.includes("09:00") && !s.time.includes("10:00") && !s.time.includes("11:00")) {
+                hour = 13;
+            }
+            if (s.time.includes("02:00")) hour = 14;
+            if (s.time.includes("03:00")) hour = 15;
+            if (s.time.includes("04:00")) hour = 16;
+            if (s.time.includes("05:00")) hour = 17;
+            if (s.time.includes("06:00")) hour = 18;
+            if (s.time.includes("07:00")) hour = 19;
+            if (s.time.includes("08:00")) hour = 20;
+
+            // ✅ grouping
+            if (hour >= 9 && hour < 12) {
+                groups["Morning"].push(s);
+            } 
+            else if (hour >= 12 && hour < 16) {
+                groups["Afternoon"].push(s);
+            } 
+            else if (hour >= 16 && hour <= 21) {
+                groups["Evening"].push(s);
             }
 
+        });
+
+        let html = "";
+
+        Object.keys(groups).forEach(section => {
+
+            if (groups[section].length === 0) return;
+
             html += `
-                <div class="slot ${isDisabled ? 'disabled' : ''}"
-                    onclick="selectSlot(this, ${s.id}, '${date}', '${s.time}')">
-                    ${s.time}
-                    ${status}
+                <div class="slot-section">
+                    <h4>${section}</h4>
+
+                    <!-- 🔥 IMPORTANT -->
+                    <div class="slots">
+            `;
+
+            groups[section].forEach(s => {
+
+                html += `
+                    <div class="slot-card ${s.booked ? 'disabled' : ''}"
+                        onclick="${s.booked ? '' : `selectSlot(this, ${s.id}, '${date}', '${s.time}')`}">
+
+                        <div class="time">${s.time}</div>
+
+                        <span class="slot-status ${s.booked ? 'full' : 'available'}">
+                            ${s.booked ? 'Full' : 'Available'}
+                        </span>
+
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
                 </div>
             `;
         });
 
-        html += `</div>`;
         container.innerHTML = html;
 
-        // Auto select
-        if (techId) {
-            let first = document.querySelector(".slot:not(.disabled)");
-            if (first) first.click();
-        }
+        // auto select
+        let first = document.querySelector(".slot-card:not(.disabled)");
+        if (first) first.click();
     });
 }
-
 
 function format(h) {
     let ampm = h >= 12 ? "PM" : "AM";
@@ -218,8 +456,8 @@ function selectSlot(el, id, date, time) {
 
     if (el.classList.contains("disabled")) return;
 
-    document.querySelectorAll(".slot").forEach(s => s.classList.remove("active-slot"));
-    el.classList.add("active-slot");
+    document.querySelectorAll(".slot-card").forEach(s => s.classList.remove("active"));
+    el.classList.add("active");
 
     document.getElementById("slot_id").value = id;
     document.getElementById("selectedSlot").innerText = `${date} | ${time}`;
@@ -231,6 +469,26 @@ function selectSlot(el, id, date, time) {
 
 // ================= TECH =================
 
+// function selectTech(id, name, phone) {
+
+//     document.getElementById("technician_id").value = id;
+//     document.getElementById("techSearch").value = name;
+
+//     document.getElementById("techDetails").innerHTML = `
+//         <div class="tech-profile">
+//             <div class="tech-avatar">${name.charAt(0)}</div>
+//             <div>
+//                 <h4>${name}</h4>
+//                 <p>${phone || "-"}</p>
+//             </div>
+//         </div>
+//     `;
+
+//     // 🔥 IMPORTANT: reload slots
+//     let date = document.getElementById("booking_date").value;
+//     if (date) generateSlots(date);
+// }
+
 function selectTech(id, name, phone) {
 
     document.getElementById("technician_id").value = id;
@@ -241,12 +499,12 @@ function selectTech(id, name, phone) {
             <div class="tech-avatar">${name.charAt(0)}</div>
             <div>
                 <h4>${name}</h4>
-                <p>${phone || "-"}</p>
+                <p>${phone}</p>
             </div>
         </div>
     `;
 
-    // 🔥 IMPORTANT: reload slots
+    // ✅ Reload slots WITH technician
     let date = document.getElementById("booking_date").value;
     if (date) generateSlots(date);
 }
@@ -297,16 +555,40 @@ function clearCustomer() {
     checkBookingReady();
 }
 
+// function clearTechnician() {
+
+//     document.getElementById("techSearch").value = "";
+//     document.getElementById("techResults").innerHTML = "";
+//     document.getElementById("techDropdown").value = "";
+
+//     document.getElementById("technician_id").value = "";
+
+//     let techDetails = document.getElementById("techDetails");
+//     techDetails.innerHTML = "";
+// }
+
+// function clearTechnician() {
+
+//     document.getElementById("technician_id").value = "";
+//     document.getElementById("techSearch").value = "";
+
+//     document.getElementById("techDetails").innerHTML = "";
+
+//     // 🔥 Reset slots (important)
+//     let date = document.getElementById("booking_date").value;
+//     if (date) generateSlots(date);
+// }
+
 function clearTechnician() {
 
-    document.getElementById("techSearch").value = "";
-    document.getElementById("techResults").innerHTML = "";
-    document.getElementById("techDropdown").value = "";
-
     document.getElementById("technician_id").value = "";
+    document.getElementById("techSearch").value = "";
+    document.getElementById("techDetails").innerHTML = "";
 
-    let techDetails = document.getElementById("techDetails");
-    techDetails.innerHTML = "";
+    let date = document.getElementById("booking_date").value;
+
+    // 🔴 Disable all slots again
+    if (date) generateSlots(date);
 }
 
 function editCustomer() {
@@ -389,4 +671,3 @@ window.onload = function () {
         }, 3000);
     }
 };
-

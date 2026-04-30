@@ -5,89 +5,96 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='customer.css') }}">
 
-<h2>Customer Management</h2>
+<div class="page-header">
+    <div>
+        <h2>Customers List</h2>
+    </div>
 
-<button onclick="openCustomerModal()" class="add-btn">+ Add Customer</button>
-
-<!-- <input type="text" id="searchCustomer" placeholder="Search name / phone"> -->
-
-<form method="get" style="margin-bottom:15px; display:flex; gap:10px;">
-    <input type="text" name="search" placeholder="Search name / mobile / email"
-           value="{{ search }}" style="padding:8px; width:250px;">
-
-    <button type="submit" class="edit-btn">Search</button>
-    <a href="/customers" class="delete-btn">Clear</a>
-</form>
-
-<div class="table-container">
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Mobile</th>
-            <th>Email</th>
-            <th>City</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-
-    <tbody>
-{% for c in customers %}
-<tr>
-    <td>{{ c[1] }}</td>
-    <td>{{ c[2] }}</td>
-    <td>{{ c[3] }}</td>
-    <td>{{ c[4] }}</td>
-    <td>
-        <button onclick="editCustomer({{ c[0] }}, '{{ c[1] }}', '{{ c[2] }}', '{{ c[3] }}', '{{ c[4] }}')" class="edit-btn">Edit</button>
-        <button onclick="deleteCustomer({{ c[0] }})" class="delete-btn">Delete</button>
-    </td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+    <div class="header-actions">
+        <button class="btn-light">Export CSV</button>
+        <button onclick="openCustomerModal()" class="btn-dark">+ Add Customer</button>
+    </div>
 </div>
 
-<!-- Modal -->
+<!-- STATS -->
+<div class="stats">
+    <div class="stat-card">
+        <p>Total Customers</p>
+        <h3>{{ total_customers or 0 }}</h3>
+    </div>
+
+    <div class="stat-card">
+        <p>Active</p>
+        <h3>{{ active_customers or 0 }}</h3>
+    </div>
+
+    <div class="stat-card">
+        <p>Inactive</p>
+        <h3>{{ inactive_customers or 0 }}</h3>
+    </div>
+</div>
+
+<!-- SEARCH -->
+<input type="text" id="searchCustomer" placeholder="Search customers..." class="search-box">
+
+<!-- LIST -->
+<div class="list-card">
+
+    <div class="list-header">
+        <span>Name</span>
+        <span>City</span>
+        <span>Phone</span>
+        <span>Status</span>
+        <span></span>
+    </div>
+
+    {% for c in customers %}
+    <div class="list-row">
+
+        <div class="user-info">
+            <div class="avatar">{{ c[1][0] }}</div>
+            <div>
+                <strong>{{ c[1] }}</strong>
+                <p>{{ c[3] }}</p>
+            </div>
+        </div>
+
+        <div>{{ c[4] }}</div>
+        <div>{{ c[2] }}</div>
+
+        <div class="status active">Active</div>
+
+        <div class="actions">
+            <button onclick="editCustomer({{ c[0] }}, '{{ c[1] }}', '{{ c[2] }}', '{{ c[3] }}', '{{ c[4] }}')" class="icon-btn">✏️</button>
+            <button onclick="deleteCustomer({{ c[0] }})" class="icon-btn delete">🗑️</button>
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+
+<!-- MODAL -->
 <div id="customerModal" class="modal">
-<div class="modal-content">
+    <div class="modal-box">
 
-<input type="hidden" id="cust_id">
+        <h3>Add / Edit Customer</h3>
 
-<input type="text" id="full_name" placeholder="Full Name">
-<input type="text" id="mobile" placeholder="Mobile Number">
-<input type="email" id="email" placeholder="Email">
+        <input type="hidden" id="cust_id">
 
-<textarea id="address" placeholder="Address"></textarea>
+        <input type="text" id="full_name" placeholder="Full Name">
+        <input type="text" id="mobile" placeholder="Mobile Number">
+        <input type="email" id="email" placeholder="Email">
+        <textarea id="address" placeholder="Address"></textarea>
+        <input type="text" id="city" placeholder="City">
 
-<input type="text" id="city" placeholder="City">
-<input type="text" id="state" placeholder="State">
-<input type="text" id="postal" placeholder="Postal Code">
-<input type="text" id="landmark" placeholder="Landmark">
+        <div class="modal-actions">
+            <button onclick="saveCustomer()" class="btn-dark">Save</button>
+            <button onclick="closeModal()" class="btn-light">Cancel</button>
+        </div>
 
-<button onclick="getLocation()">📍 Get Live Location</button>
-
-<input type="hidden" id="lat">
-<input type="hidden" id="lng">
-
-<button onclick="saveCustomer()">Save</button>
-<button onclick="closeModal()">Cancel</button>
-
-</div>
-</div>
-
-<div style="margin-top:20px; text-align:center;">
-
-    {% if page > 1 %}
-        <a href="?search={{ search }}&page={{ page-1 }}" class="edit-btn">⬅ Prev</a>
-    {% endif %}
-
-    <span>Page {{ page }} of {{ total_pages }}</span>
-
-    {% if page < total_pages %}
-        <a href="?search={{ search }}&page={{ page+1 }}" class="edit-btn">Next ➡</a>
-    {% endif %}
-
+    </div>
 </div>
 
 <script src="{{ url_for('static', filename='customer.js') }}"></script>

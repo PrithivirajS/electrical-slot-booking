@@ -1,208 +1,222 @@
 {% extends "base.html" %}
-
 {% block title %}Technicians{% endblock %}
 
 {% block content %}
 
-<div style="display:flex; justify-content:space-between;">
-    <h2>Technician Management</h2>
-    <button onclick="openModal()" class="add-btn">+ Add Technician</button>
-</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='technicians.css') }}">
 
-<div class="table-container">
-    <table>
-        <thead>
+<div class="tech-wrapper">
+
+    <!-- HEADER -->
+    <div class="tech-header">
+        <div>
+            <h2>Technician Management</h2>
+            <p>Manage technicians and availability</p>
+        </div>
+
+        <div class="tech-actions">
+            <button onclick="openModal()" class="btn-primary">+ Add Technician</button>
+        </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="tech-filter">
+        <input type="text" id="searchTech" placeholder="Search technicians...">
+    </div>
+
+    <!-- TABLE -->
+    <div class="tech-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Technician</th>
+                    <th>Phone</th>
+                    <th>Area</th>
+                    <th>Status</th>
+                    <th>Active</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody id="techTable">
+            {% for t in technicians %}
             <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Area / Village</th>
-                <th>Status</th>
-                <th>Active</th>
-                <th>Actions</th>
+
+                <td>
+                    <div class="tech-user">
+                        <div class="avatar">
+                            {{ t[1][0] if t[1] else 'T' }}
+                        </div>
+                        <div>
+                            <div class="name">{{ t[1] }}</div>
+                            <div class="sub">ID: {{ t[0] }}</div>
+                        </div>
+                    </div>
+                </td>
+
+                <td>{{ t[2] }}</td>
+                <td>{{ t[6] or '-' }}</td>
+
+                <td>
+                    <span class="badge">{{ t[16] }}</span>
+                </td>
+
+                <td>
+                    <span class="status {{ 'active' if t[17] else 'inactive' }}">
+                        {{ 'Active' if t[17] else 'Inactive' }}
+                    </span>
+                </td>
+
+                <td class="actions">
+                    <button onclick="viewTech({{ t[0] }})">👁️</button>
+                    <button onclick="editTech({{ t[0] }})">✏️</button>
+                    <button onclick="deleteTech({{ t[0] }})" class="delete">🗑️</button>
+                </td>
+
             </tr>
-        </thead>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-        <tbody>
-        {% for t in technicians %}
-        <tr>
-            <td>{{ t[0] }}</td>
-            <td>{{ t[1] or '-' }}</td>
-            <td>{{ t[2] or '-' }}</td>
-            <td>{{ t[6] or '-' }}</td>
-            <td>{{ t[16] }}</td>
-
-            <td>
-                <button onclick="toggleTech({{ t[0] }})">
-                    {{ 'Active' if t[17] == 1 else 'Inactive' }}
-                </button>
-            </td>
-
-            <td>
-                <button onclick="viewTech({{ t[0] }})">👁️ View</button>
-                <button onclick="editTech({{ t[0] }})" class="edit-btn">✏️ Edit</button>
-                <button onclick="deleteTech({{ t[0] }})" class="delete-btn">🗑️ Delete</button>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
 </div>
 
-<!-- ================= MODAL ================= -->
-<div id="techModal" class="modal">
-    <div class="modal-content" style="width:650px;">
+<!-- ================= SAAS MODAL ================= -->
+<div id="techModal" class="modal-overlay">
 
+    <div class="modal-box">
+
+        <!-- HEADER -->
+        <div class="modal-header">
+            <h3 id="modalTitle">Add Technician</h3>
+            <span class="close-btn" onclick="closeModal()">✖</span>
+        </div>
+
+        <!-- FORM -->
         <form id="techForm" enctype="multipart/form-data">
 
-        <div class="modal-body">
+            <input type="hidden" name="id">
 
-            <h2>Technician Onboarding</h2>
+            <div class="modal-body">
 
-            <!-- BASIC -->
-            <h3>Basic Information</h3>
-            <input type="text" name="name" placeholder="Full Name" required>
-            <input type="text" name="phone1" placeholder="Phone Number" required>
-            <input type="text" name="phone2" placeholder="Alternate Phone">
-            <input type="date" name="dob">
-            <select name="marital_status">
-                <option>Marital Status</option>
-                <option>Single</option>
-                <option>Married</option>
-            </select>
-            <input type="text" name="emergency_contact" placeholder="Emergency Contact">
+                <!-- BASIC -->
+                <div class="form-section">
+                    <h4>Basic Info</h4>
+                    <div class="grid-2">
+                        <input type="text" name="first_name" placeholder="First Name *" required>
+                        <input type="text" name="last_name" placeholder="Last Name *" required>
 
-            <!-- ADDRESS -->
-            <h3>Address</h3>
-            <input type="text" name="flat" placeholder="Flat / Door No">
-            <input type="text" name="street" placeholder="Street">
-            <input type="text" name="post" placeholder="Post">
-            <input type="text" name="taluk" placeholder="Taluk">
-            <input type="text" name="district" placeholder="District">
-            <input type="text" name="pincode" placeholder="Pincode">
+                        <input type="text" name="phone1" placeholder="Phone Number *" maxlength="10" required>
+                        <input type="text" name="phone2" placeholder="Alternate Phone" maxlength="10">
 
-            <!-- ID -->
-            <h3>Identity Verification</h3>
-            <select name="govtType">
-                <option>Aadhaar</option>
-                <option>PAN</option>
-                <option>Passport</option>
-                <option>Driving License</option>
-                <option>Voter ID</option>
-            </select>
-            <input type="text" name="govtNumber" placeholder="ID Number">
+                        <label>Date of Birth</label>
+                        <input type="date" name="dob">
+                    </div>
+                </div>
 
-            <!-- EDUCATION -->
-            <h3>Education</h3>
-            <input type="text" name="education" placeholder="Education">
-            <input type="text" name="experience" placeholder="Experience">
-            <textarea name="skills" placeholder="Skills"></textarea>
+                <!-- ADDRESS -->
+                <div class="form-section">
+                    <h4>Address</h4>
+                    <div class="grid-2">
+                        <input type="text" name="flat" placeholder="Flat / Door No">
+                        <input type="text" name="street" placeholder="Street">
 
-            <!-- BANK -->
-            <h3>Bank Details</h3>
-            <input type="text" name="account_name" placeholder="Account Name">
-            <input type="text" name="account_number" placeholder="Account Number">
-            <input type="text" name="ifsc" placeholder="IFSC Code">
-            <input type="text" name="bank_name" placeholder="Bank Name">
+                        <input type="text" name="post" placeholder="Village / Post">
+                        <input type="text" name="taluk" placeholder="Taluk">
 
-            <!-- FILES -->
-            <h3>Documents</h3>
-            <label>Resume</label>
-            <input type="file" name="resume">
+                        <input type="text" name="district" placeholder="District">
+                        <input type="text" name="state" placeholder="State">
 
-            <label>Photo</label>
-            <input type="file" name="photo">
+                        <input type="text" name="pincode" placeholder="Pincode (6 digits)">
+                    </div>
+                </div>
 
-        </div>
+                <!-- EDUCATION -->
+                <div class="form-section">
+                    <h4>Education</h4>
+                    <div class="grid-2">
+                        <input type="text" name="education_primary" placeholder="Primary Education *" required>
+                        <input type="text" name="education_secondary" placeholder="Secondary Education">
 
-        <div class="modal-footer">
-            <button type="button" onclick="saveTechnician()" class="save-btn">Submit</button>
-            <button type="button" onclick="closeModal()" class="cancel-btn">Cancel</button>
-        </div>
+                        <label>Upload Resume *</label>
+                        <input type="file" name="resume" required>
+                    </div>
+                </div>
+
+                <!-- PROOF -->
+                <div class="form-section">
+                    <h4>Personal Proof *</h4>
+
+                    <div class="grid-2">
+
+                        <!-- PROOF TYPE -->
+                        <select name="proof_type" required>
+                            <option value="">Select Proof Type *</option>
+                            <option>Aadhaar</option>
+                            <option>PAN</option>
+                            <option>Driving License</option>
+                        </select>
+
+                        <!-- ID NUMBER -->
+                        <input type="text" name="id_number" placeholder="ID Number *" required>
+
+                        <!-- FILE -->
+                        <label>Upload Proof (PDF only) *</label>
+                        <input type="file" name="proof_file" accept="application/pdf" required>
+
+                    </div>
+                </div>
+
+                <!-- BANK -->
+                <div class="form-section">
+                    <h4>Bank Details</h4>
+                    <div class="grid-2">
+                        <input type="text" name="account_name" placeholder="Account Holder Name">
+                        <input type="text" name="account_number" placeholder="Account Number">
+                        <input type="text" name="ifsc" placeholder="IFSC Code">
+                    </div>
+                </div>
+
+                <!-- SYSTEM -->
+                <div class="form-section">
+                    <h4>System</h4>
+
+                    <div class="grid-2">
+
+                        <!-- LAT / LNG -->
+                        <input type="number" step="any" id="latitude" name="latitude" placeholder="Latitude">
+                        <input type="number" step="any" id="longitude" name="longitude" placeholder="Longitude">
+
+                        <!-- LOCATION BUTTON -->
+                        <button type="button" class="btn-location" onclick="getLocation()">
+                            📍 Use Current Location
+                        </button>
+
+                        <!-- STATUS -->
+                        <select name="active">
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button type="button" onclick="saveTechnician()" class="btn-save">Save</button>
+                <button type="button" onclick="closeModal()" class="btn-cancel">Cancel</button>
+            </div>
 
         </form>
+
     </div>
 </div>
 
-<!-- SUCCESS POPUP -->
-<div id="successPopup" class="modal">
-    <div class="success-box">
-        <div class="success-icon">✔</div>
-        <h3>Success!</h3>
-        <button onclick="closeSuccessPopup()" class="confirm-btn">OK</button>
-    </div>
-</div>
+<!-- TOAST -->
+<div id="toast"></div>
 
-<script>
-
-// OPEN MODAL
-function openModal() {
-    document.getElementById("techModal").style.display = "block";
-}
-
-// CLOSE MODAL
-function closeModal() {
-    document.getElementById("techModal").style.display = "none";
-}
-
-// SAVE
-function saveTechnician() {
-
-    let form = document.getElementById("techForm");
-    let formData = new FormData(form);
-
-    fetch("/add_technician", {
-        method: "POST",
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === "success") {
-            closeModal();
-            document.getElementById("successPopup").style.display = "block";
-        } else {
-            alert(data.error);
-        }
-    });
-}
-
-// DELETE
-function deleteTech(id) {
-    if (!confirm("Delete technician?")) return;
-
-    fetch("/delete-technician", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({id: id})
-    })
-    .then(() => location.reload());
-}
-
-// TOGGLE
-function toggleTech(id) {
-    fetch("/toggle-technician", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({id: id})
-    })
-    .then(() => location.reload());
-}
-
-// VIEW
-function viewTech(id) {
-    fetch(`/get-technician/${id}`)
-    .then(res => res.json())
-    .then(data => {
-        alert(`Name: ${data.name}\nPhone: ${data.phone1}`);
-    });
-}
-
-// SUCCESS
-function closeSuccessPopup() {
-    document.getElementById("successPopup").style.display = "none";
-    location.reload();
-}
-
-</script>
+<script src="{{ url_for('static', filename='technicians.js') }}"></script>
 
 {% endblock %}

@@ -3,13 +3,12 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='booking_success.css') }}">
 
+<div class="page">
 
-<div class="booking-wrapper">
-
-    <div class="booking-panel">
+    <div class="container">
 
         <!-- HEADER -->
-        <div class="header">
+        <div class="top">
             <div>
                 <h2>{{ booking[4] }}</h2>
                 <p class="date">Request Date: {{ booking[1] }}</p>
@@ -21,73 +20,89 @@
                 </div>
             </div>
 
-            <button class="cancel-btn">Cancel Request</button>
+            <button class="cancel">Cancel Request</button>
         </div>
 
-        <!-- MAIN -->
-        <div class="booking-main">
+        <!-- CONTENT -->
+        <div class="layout">
 
-            <!-- LEFT SIDE (FULL CONTENT INSIDE ONE FLOW) -->
+            <!-- LEFT -->
             <div class="left">
 
-                <!-- BOOKING CONFIRM -->
-                <div class="card">
-                    <h3 class="success">✔ Booking Confirmed</h3>
+                <!-- STATUS CARD -->
+                <div class="card main-card">
 
-                    <div class="user-row">
+                    <div class="status">
+                        ✔ Booking Confirmed
+                    </div>
+
+                    <div class="profile">
                         <div class="avatar">👤</div>
-                        <div>
-                            <p class="name">{{ booking[6] }}</p>
-                            <p class="sub">{{ booking[7] }}</p>
+
+                        <div class="text">
+                            <p class="msg">
+                                Technician will be assigned 1 hour before the scheduled time
+                            </p>
+
+                            <div class="slot">
+                                {{ booking[2] }} on {{ booking[1] }}
+                            </div>
                         </div>
                     </div>
 
-                    <p class="info-text">
-                        Technician will be assigned 1 hour before the scheduled time
-                    </p>
+                    <button class="reschedule">Re-schedule</button>
 
-                    <div class="time-box">
-                        {{ booking[2] }} on {{ booking[1] }}
-                    </div>
-
-                    <button class="reschedule-btn">Re-schedule</button>
                 </div>
 
                 <!-- CHECKLIST -->
                 <div class="card small">
-                    <h4>Service Checklist</h4>
-                    <p>See what all you should know before service.</p>
+                    <div class="row-between">
+                        <div>
+                            <h4>Service Checklist</h4>
+                            <p>Things to know before service</p>
+                        </div>
+                        <span>›</span>
+                    </div>
                 </div>
 
                 <!-- HELP -->
                 <div class="card small">
-                    <h4>Need help?</h4>
-                    <p>Call support: +91 9876543210</p>
+                    <div class="row-between">
+                        <div>
+                            <h4>Need help?</h4>
+                            <p>Call support anytime</p>
+                        </div>
+                        <button class="call">📞 Call</button>
+                    </div>
                 </div>
 
             </div>
 
-            <!-- RIGHT SIDE -->
+            <!-- RIGHT -->
             <div class="right">
+
                 <div class="payment">
+
                     <h4>Payment Summary</h4>
 
-                    <div class="row">
+                    <div class="line">
                         <span>Total</span>
                         <span>₹{{ booking[5] }}</span>
                     </div>
 
-                    <div class="row">
+                    <div class="line">
                         <span>GST (18%)</span>
                         <span>₹{{ (booking[5]*0.18)|int }}</span>
                     </div>
 
-                    <div class="total">
+                    <div class="amount">
                         ₹{{ booking[5] + (booking[5]*0.18)|int }}
                     </div>
 
-                    <button class="pay-btn">Pay Now</button>
+                    <button class="pay">Pay Now</button>
+
                 </div>
+
             </div>
 
         </div>

@@ -2,101 +2,60 @@
 <html>
 <head>
     <title>{% block title %}{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
+
+<!-- <div id="overlay" class="overlay"></div> -->
 
 <body>
 
-<div class="container">
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar" id="sidebar">
+    <h2>⚡ E-service</h2>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h2 onclick="goDashboard()" style="cursor:pointer;">⚡ E-service</h2>
-        <ul>
-            <li><a href="/home" class="menu-item">Home</a></li>
-            <li><a href="/dashboard" class="menu-item">Dashboard</a></li>
-            <li><a href="/users" class="menu-item">Users</a></li>
-            <li><a href="/technicians" class="menu-item">Technicians</a></li>
-            <li><a href="/booking" class="menu-item">Booking</a></li>
-            <li><a href="/customers" class="menu-item">Customers</a></li>
-        </ul>
-    </div>
+    <ul>
+        <li><a href="/home" class="menu-item">Home</a></li>
+        <li><a href="/dashboard" class="menu-item active">Dashboard</a></li>
+        <li><a href="/users" class="menu-item">Users</a></li>
+        <li><a href="/technicians" class="menu-item">Technicians</a></li>
+        <li><a href="/booking" class="menu-item">Booking</a></li>
+        <li><a href="/customers" class="menu-item">Customers</a></li>
+    </ul>
+</div>
 
-    <!-- Main -->
-    <div class="main">
+<!-- ===== MAIN ===== -->
+<div class="main" id="main">
 
-        <!-- TOPBAR -->
-        <div class="topbar-pro">
-
-            <div class="topbar-left">
-                <h3>Welcome, {{ user_name }}</h3>
-            </div>
-
-            <div class="topbar-right">
-
-                <div class="notification">
-                    🔔 <span class="badge">3</span>
-                </div>
-
-                <div class="profile-dropdown">
-
-                    <div class="profile-box" id="profileBtn">
-                        <div class="profile-circle" id="initial">PS</div>
-                        <div class="profile-name">{{ user_name }}</div>
-                    </div>
-
-                    <div class="dropdown-menu-pro" id="profileDropdown">
-                        <div class="dropdown-header">{{ user_name }}</div>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">Profile</a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item logout" onclick="openLogoutModal()">Logout</a>
-                    </div>
-
-                </div>
-            </div>
-
+    <!-- ===== TOPBAR ===== -->
+    <div class="topbar-pro">
+        <div class="topbar-left">
+            <span class="toggle-btn" onclick="toggleSidebar()">☰</span>
+            <h3>Welcome, {{ session['username'] }}</h3>
         </div>
 
-        <!-- PAGE CONTENT -->
+        <div class="topbar-right">
+            <span>🔔 3</span>
+            <div class="profile-circle">
+                <span id="initial"></span>
+            </div>
+            <span>{{ session['username'] }}</span>
+        </div>
+    </div>
+
+    <!-- ===== PAGE CONTENT ===== -->
+    <div class="page-content">
         {% block content %}{% endblock %}
-
     </div>
+
 </div>
 
-<!-- LOGOUT MODAL -->
-<div id="logoutModal" class="modal">
-    <div class="modal-content">
-        <h3>⚠ Session Expired</h3>
-        <p>Your session has ended securely.</p>
-        <button onclick="confirmLogout()" class="confirm-btn">
-            Conform to logout
-        </button>
-    </div>
-</div>
-
-<!-- LIVE CLOCK -->
+<!-- CLOCK -->
 <div class="live-time" id="liveTime"></div>
 
-<!-- JS -->
-<!-- <script src="{{ url_for('static', filename='dashboard.js') }}"></script> -->
-
+<script src="{{ url_for('static', filename='base.js') }}"></script>
 {% block extra_js %}{% endblock %}
-
-<script>
-function goDashboard(){
-    window.location.href = "/dashboard";
-}
-
-function openLogoutModal(){
-    document.getElementById("logoutModal").style.display = "block";
-}
-
-function confirmLogout(){
-    window.currentUser = null;
-    window.location.href = "/logout";
-}
-</script>
 
 </body>
 </html>

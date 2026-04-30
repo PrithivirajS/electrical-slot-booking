@@ -7,119 +7,121 @@
 
 <div class="booking-container">
 
-    {% if request.args.get('success') %}
-
-<!-- <div class="success-card">
+```
+{% if request.args.get('success') %}
+<!-- Optional success block (kept commented) -->
+<!--
+<div class="success-card">
     <h2>🎉 Booking Confirmed!</h2>
-
     <p><b>Booking ID:</b> {{ request.args.get('code') }}</p>
     <p><b>Customer:</b> {{ request.args.get('name') }}</p>
-
     <p class="thank-you">Thank you for choosing our service ⚡</p>
-</div> -->
-
+</div>
+-->
 {% endif %}
 
-    <!-- LEFT PANEL -->
-    <div class="booking-left">
+<!-- LEFT PANEL -->
+<div class="booking-left">
 
-        <!-- SERVICE CARD -->
-        <div class="service-card">
-            <div>
-                <h3>{{ selected_service[1] }} ⚡</h3>
-                <p>Professional service at your doorstep</p>
-                <span class="price">₹{{ selected_service[2] }} • 30 mins</span>
-            </div>
+    <!-- SERVICE CARD -->
+    <div class="service-card">
+        <div>
+            <h3>{{ selected_service[1] }} ⚡</h3>
+            <p>Professional service at your doorstep</p>
+            <span class="price">₹{{ selected_service[2] }} • 30 mins</span>
         </div>
-
-        <!-- DATE -->
-        <div class="date-wrapper">
-            <button type="button" onclick="loadDates(-7)">‹</button>
-            <div id="dateContainer" class="date-scroll"></div>
-            <button type="button" onclick="loadDates(7)">›</button>
-        </div>
-
-        <!-- SLOT -->
-        <div id="slotsContainer"></div>
-
     </div>
 
-    <!-- RIGHT PANEL -->
-    <div class="booking-right">
+    <!-- DATE -->
+    <div class="date-wrapper">
+        <button type="button" onclick="loadDates(-7)">‹</button>
+        <div id="dateContainer" class="date-scroll"></div>
+        <button type="button" onclick="loadDates(7)">›</button>
+    </div>
 
-        <h3>Booking Summary</h3>
+    <!-- ✅ SLOT CONTAINER (CRITICAL FIX) -->
+    <div id="slotsContainer"></div>
 
-        <!-- 🔥 SINGLE FORM (ALL DATA INSIDE) -->
-        <form method="POST" action="/book" onsubmit="return submitForm(this)">
+</div>
 
-            <!-- ================= HIDDEN FIELDS ================= -->
-            <input type="hidden" name="service_id" value="{{ selected_service[0] }}">
-            <input type="hidden" name="technician_id" id="technician_id">
-            <input type="hidden" name="slot_id" id="slot_id">
-            <input type="hidden" name="booking_date" id="booking_date">
-            <input type="hidden" name="selected_time" id="selectedTime">
+<!-- RIGHT PANEL -->
+<div class="booking-right">
 
-            <input type="hidden" name="name" id="cust_name">
-            <input type="hidden" name="phone" id="cust_phone">
-            <input type="hidden" name="email" id="cust_email">
-            <input type="hidden" name="city" id="cust_city">
+    <h3>Booking Summary</h3>
 
-            <input type="hidden" name="latitude" id="latitude">
-            <input type="hidden" name="longitude" id="longitude">
+    <form method="POST" action="/book" onsubmit="return submitForm(this)">
 
-            <!-- ================= TECHNICIAN ================= -->
-            <div class="tech-card">
-                <h4>Technician Details</h4>
+        <!-- HIDDEN FIELDS -->
+        <input type="hidden" name="service_id" value="{{ selected_service[0] }}">
+        <input type="hidden" name="technician_id" id="technician_id">
+        <input type="hidden" name="slot_id" id="slot_id">
+        <input type="hidden" name="booking_date" id="booking_date">
+        <input type="hidden" name="selected_time" id="selectedTime">
 
-                <input type="text" id="techSearch" placeholder="Search technician name or mobile">
+        <input type="hidden" name="name" id="cust_name">
+        <input type="hidden" name="phone" id="cust_phone">
+        <input type="hidden" name="email" id="cust_email">
+        <input type="hidden" name="city" id="cust_city">
 
-                 <div id="techResults" class="tech-results"></div>
+        <input type="hidden" name="latitude" id="latitude">
+        <input type="hidden" name="longitude" id="longitude">
 
-                <div id="techDetails"></div>
+        <!-- TECHNICIAN -->
+        <div class="tech-card">
+            <h4>Technician Details</h4>
 
-                <button type="button" onclick="clearTechnician()" class="clear-btn">
-                    ❌ Clear Technician
-                </button>
-            </div>
+            <input type="text" id="techSearch" placeholder="Search technician name or mobile">
 
-            <!-- ================= CUSTOMER ================= -->
-            <div class="customer-card">
+            <div id="techResults" class="tech-results"></div>
 
-                <h4>Customer Details</h4>
+            <div id="techDetails"></div>
 
-                <input type="text" id="customerSearch" placeholder="Search customer name or mobile">
+            <button type="button" onclick="clearTechnician()" class="clear-btn">
+                ❌ Clear Technician
+            </button>
+        </div>
 
-                <div id="customerResults" class="tech-results"></div>
+        <!-- CUSTOMER -->
+        <div class="customer-card">
 
-                <div id="customerPreview" class="tech-profile" style="display:none;"></div>
+            <h4>Customer Details</h4>
 
-                <button type="button" onclick="clearCustomer()" class="clear-btn">
-                    ❌ Clear Customer
-                </button>
+            <input type="text" id="customerSearch" placeholder="Search customer name or mobile">
 
-            </div>
+            <div id="customerResults" class="tech-results"></div>
 
-            <!-- ================= SUMMARY ================= -->
-            <div class="summary-box">
-                <p><b>Slot:</b> <span id="selectedSlot">None</span></p>
-                <p><b>Time Left:</b> <span id="timer">--</span></p>
-            </div>
+            <div id="customerPreview" class="tech-profile" style="display:none;"></div>
 
-            <!-- ================= BUTTON ================= -->
-            <button class="book-btn" id="bookBtn" disabled>
-                Confirm Booking
+            <button type="button" onclick="clearCustomer()" class="clear-btn">
+                ❌ Clear Customer
             </button>
 
-        </form>
+        </div>
 
-    </div>
+        <!-- SUMMARY -->
+        <div class="summary-box">
+            <p><b>Slot:</b> <span id="selectedSlot">None</span></p>
+            <p><b>Time Left:</b> <span id="timer">--</span></p>
+        </div>
+
+        <!-- BUTTON -->
+        <button class="book-btn" id="bookBtn" disabled>
+            Confirm Booking
+        </button>
+
+    </form>
+
+</div>
+```
 
 </div>
 
 <div id="toast" class="toast">✅ Booking Confirmed</div>
 
 {% block extra_js %}
+
 <script src="{{ url_for('static', filename='booking.js') }}"></script>
+
 {% endblock %}
 
 {% endblock %}

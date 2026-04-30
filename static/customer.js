@@ -1,102 +1,81 @@
-function openCustomerModal(){
-    document.getElementById("customerModal").style.display = "block";
+// ✅ OPEN MODAL
+function openCustomerModal() {
+    document.getElementById("customerModal").style.display = "flex";
+
+    // reset form
+    document.getElementById("cust_id").value = "";
+    document.getElementById("full_name").value = "";
+    document.getElementById("mobile").value = "";
+    document.getElementById("email").value = "";
+    document.getElementById("address").value = "";
+    document.getElementById("city").value = "";
 }
 
-function closeModal(){
+// ✅ CLOSE MODAL
+function closeModal() {
     document.getElementById("customerModal").style.display = "none";
 }
 
-// ✅ Mobile validation
-function isValidMobile(mobile){
+// ✅ MOBILE VALIDATION
+function isValidMobile(mobile) {
     return /^[6-9]\d{9}$/.test(mobile);
 }
 
-function saveCustomer(){
+// ✅ SAVE CUSTOMER (ADD / UPDATE)
+function saveCustomer() {
 
     let data = {
         id: document.getElementById("cust_id").value,
-        full_name: document.getElementById("full_name").value,
+        name: document.getElementById("full_name").value,
         mobile: document.getElementById("mobile").value,
         email: document.getElementById("email").value,
         address: document.getElementById("address").value,
-        city: document.getElementById("city").value,
-        state: document.getElementById("state").value,
-        postal: document.getElementById("postal").value,
-        landmark: document.getElementById("landmark").value,
-        lat: document.getElementById("lat").value,
-        lng: document.getElementById("lng").value
+        city: document.getElementById("city").value
     };
 
-    if(!isValidMobile(data.mobile)){
+    // validation
+    if (!data.name || !data.mobile) {
+        alert("Name and Mobile are required");
+        return;
+    }
+
+    if (!isValidMobile(data.mobile)) {
         alert("Invalid Mobile Number");
         return;
     }
 
     fetch("/add-customer", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     })
     .then(res => res.json())
     .then(res => {
-        alert("Saved");
+        alert("Customer saved successfully");
         location.reload();
-    });
-}
-
-// ✅ Live location
-function getLocation(){
-    navigator.geolocation.getCurrentPosition(pos => {
-        document.getElementById("lat").value = pos.coords.latitude;
-        document.getElementById("lng").value = pos.coords.longitude;
-        alert("Location Captured");
-    });
-}
-
-
-window.onload = function(){
-    loadCustomers();
-}
-
-function loadCustomers(){
-
-    fetch("/get-customers")
-    .then(res => res.json())
-    .then(data => {
-
-        let table = document.getElementById("customerTable");
-        table.innerHTML = "";
-
-        data.forEach(c => {
-
-            let row = `
-                <tr>
-                    <td>${c.name}</td>
-                    <td>${c.mobile}</td>
-                    <td>${c.email}</td>
-                    <td>${c.city}</td>
-                    <td>
-                        <button onclick="deleteCustomer(${c.id})">Delete</button>
-                    </td>
-                </tr>
-            `;
-
-            table.innerHTML += row;
-        });
-    });
-}
-
-
-function deleteCustomer(id){
-    fetch("/delete-customer", {
-        method:"POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({id:id})
     })
-    .then(()=> location.reload());
+    .catch(err => {
+        console.error(err);
+        alert("Error saving customer");
+    });
 }
 
-function editCustomer(id, name, mobile, email, city){
+// ✅ DELETE CUSTOMER
+function deleteCustomer(id) {
+
+    if (!confirm("Are you sure you want to delete this customer?")) return;
+
+    fetch("/delete-customer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id })
+    })
+    .then(() => location.reload())
+    .catch(err => console.error(err));
+}
+
+// ✅ EDIT CUSTOMER
+function editCustomer(id, name, mobile, email, city) {
 
     openCustomerModal();
 
@@ -107,16 +86,26 @@ function editCustomer(id, name, mobile, email, city){
     document.getElementById("city").value = city;
 }
 
-document.getElementById("searchCustomer").addEventListener("keyup", function(){
+// ✅ SEARCH (LIVE FILTER WITHOUT PAGE RELOAD)
+const searchInput = document.getElementById("searchCustomer");
 
-    let q = this.value;
+if (searchInput) {
+    searchInput.addEventListener("keyup", function () {
 
-    fetch("/customers?search=" + q)
-    .then(res => res.text())
-    .then(html => {
-        document.open();
-        document.write(html);
-        document.close();
+        let value = this.value.toLowerCase();
+        let rows = document.querySelectorAll(".list-row");
+
+        rows.forEach(row => {
+            let text = row.innerText.toLowerCase();
+            row.style.display = text.includes(value) ? "grid" : "none";
+        });
     });
+}
 
-});
+// ✅ CLOSE MODAL ON OUTSIDE CLICK
+window.onclick = function (event) {
+    let modal = document.getElementById("customerModal");
+    if (event.target === modal) {
+        closeModal();
+    }
+};

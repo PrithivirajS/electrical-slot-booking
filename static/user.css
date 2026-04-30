@@ -1,0 +1,285 @@
+/* PAGE */
+.users-wrapper {
+    padding: 20px;
+}
+
+/* HEADER */
+.users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.users-header h2 {
+    margin: 0;
+}
+
+.users-header p {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* BUTTONS */
+.btn-dark {
+    background: #111827;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+}
+
+.btn-light {
+    background: #f3f4f6;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+}
+
+.users-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* STATS */
+.users-stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    flex: 1;
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.stat-card p {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.stat-card h2 {
+    margin-top: 8px;
+}
+
+/* FILTER */
+.users-filter input {
+    padding: 10px;
+    width: 260px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+/* TABLE */
+.users-table {
+    margin-top: 15px;
+    background: white;
+    border-radius: 12px;
+    padding: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #f9fafb;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+}
+
+tr {
+    border-bottom: 1px solid #eee;
+}
+
+/* USER */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #6366f1;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* TEXT */
+.name {
+    font-weight: 600;
+}
+
+.email {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* ROLE */
+.role {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.role.admin {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.role.user {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+/* STATUS */
+.status.active {
+    color: green;
+    font-weight: 600;
+}
+
+/* ACTIONS */
+.actions button {
+    border: none;
+    background: #f3f4f6;
+    padding: 6px 8px;
+    border-radius: 6px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.actions .delete {
+    background: #fee2e2;
+}
+
+.users-table table {
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.users-table tr {
+    background: white;
+}
+
+/* FORM CONTAINER */
+.user-form-section {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin: 20px 0;
+    max-width: 600px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* FORM GROUP (STACKED) */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+/* LABEL */
+.form-group label {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #374151;
+}
+
+/* INPUT */
+.form-group input,
+.form-group select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    outline: none;
+}
+
+/* FOCUS EFFECT */
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #6366f1;
+}
+
+/* ACTION BUTTONS */
+.form-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+/* MODAL */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: #fff;
+    width: 420px;
+    border-radius: 12px;
+    padding: 20px;
+    animation: slideUp 0.25s ease;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.close {
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.modal-footer {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+/* ANIMATION */
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* TOAST */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #111827;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 6px;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+.toast.error {
+    background: #dc2626;
+}

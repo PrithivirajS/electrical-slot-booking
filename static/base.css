@@ -1,0 +1,248 @@
+body {
+    margin: 0;
+    font-family: "Inter", sans-serif;
+    background: #f6f7fb;
+    overflow-x: hidden;
+}
+
+/* ===== SIDEBAR ===== */
+/*.sidebar {
+    width: 200px;
+    height: 100vh;
+    background: #0b1c3d;
+    color: white;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    transition: 0.3s;
+}*/
+
+
+
+/*.sidebar.collapsed {
+    width: 70px;
+}
+*/
+
+.sidebar {
+    width: 210px;
+    height: 100vh;
+    background: linear-gradient(180deg, #1e1b4b, #312e81);
+    color: white;
+    padding: 20px;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    z-index: 1000;
+
+/*    transform: translateX(-100%);  
+    transition: transform 0.3s ease;*/
+}
+
+/* hidden state */
+/*.sidebar.collapsed {
+    transform: translateX(-100%);
+}*/
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+/*.sidebar.open {
+    transform: translateX(0);
+}*/
+
+.menu-item {
+    display: block;
+    padding: 10px;
+    color: #cbd5f5;
+    text-decoration: none;
+    border-radius: 6px;
+}
+
+.menu-item:hover {
+    background: #1e3a8a;
+}
+
+.menu-item.active {
+    background: linear-gradient(90deg,#6c2bd9,#9333ea);
+    color: white;
+}
+
+/* ===== MAIN ===== */
+/*.main {
+    position: absolute;
+    top: 0;
+    left: 230px;                     
+    width: calc(100% - 230px);
+    min-height: 100vh;
+
+    padding: 20px;
+    box-sizing: border-box;
+}*/
+
+/*.main {
+    margin-left: 240px;
+    width: calc(100% - 240px);
+    transition: 0.3s ease;
+}*/
+
+
+/*.main {
+    width: 100%;
+    min-height: 100vh;
+    transition: 0.3s ease;
+    padding: 20px;
+}*/
+
+.main {
+    margin-left: 240px;              /* 👈 KEY FIX */
+    width: calc(100% - 240px);      /* 👈 MATCH SIDEBAR WIDTH */
+    min-height: 100vh;
+    padding: 0;
+}
+
+/*.main.expanded {
+    left: 70px;
+    width: calc(100% - 70px);
+}*/
+
+.main.expanded {
+    margin-left: 0;
+    width: 100%;
+}
+
+/* ===== TOPBAR ===== */
+.topbar-pro {
+    margin: 20px;
+    width: 100%;
+    background: #fff;
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    position: relative;   /* keep normal flow */
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toggle-btn {
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.profile-circle {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #6c2bd9;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===== CONTENT ===== */
+.page-content {
+
+    padding: 20px;
+    /*width: 100%;*/
+}
+
+/* ===== CLOCK ===== */
+.live-time {
+    position: fixed;
+    bottom: 15px;
+    right: 20px;
+    background: black;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+/*.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(2px);
+
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+
+    z-index: 900;
+}
+
+.overlay.show {
+    opacity: 1;
+    visibility: visible;
+}*/
+
+/*.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0,0,0,0.45);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition: 0.3s ease;
+    z-index: 900;
+}
+
+.overlay.show {
+    opacity: 1;
+    visibility: visible;
+}*/
+
+.menu-item {
+    display: block;
+    padding: 12px;
+    color: #c7d2fe;
+    text-decoration: none;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    transition: 0.2s;
+}
+
+.menu-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.menu-item.active {
+    background: linear-gradient(90deg,#7c3aed,#9333ea);
+    color: white;
+}
+
+.hero-section {
+    border-radius: 16px;
+    overflow: hidden;
+}

@@ -65,12 +65,19 @@ def admin_required(f):
 # ---------------------------
 
 # Home
+# @app.route("/")
+# def index():
+#     cur = mysql.connection.cursor()
+#     cur.execute("SELECT * FROM slots")
+#     slots = cur.fetchall()
+#     return render_template("index.html", slots=slots)
+
 @app.route("/")
 def index():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM slots")
-    slots = cur.fetchall()
-    return render_template("index.html", slots=slots)
+    if 'user_id' in session:
+        return redirect("/home")
+    else:
+        return redirect("/login")
 
 
 # Register
@@ -124,7 +131,8 @@ def login():
             session['user_name'] = user[3]
 
             # ✅ ALWAYS redirect to dashboard (FIXED)
-            return redirect("/dashboard")
+            # return redirect("/dashboard")
+            return redirect("/home")
 
         # ❌ Send error to UI (NOT plain text)
         return render_template("login.html", error="❌ Invalid email or password")
@@ -257,6 +265,197 @@ def generate_booking_code(name):
     return f"ELE{name[:3].upper()}{random.randint(10000,99999)}"
 
 
+@app.route("/get-tech-slots")
+@login_required
+def get_tech_slots():
+
+    date = request.args.get("date")
+    tech_id = request.args.get("tech_id")
+
+    cur = mysql.connection.cursor()
+
+    # Get all slots
+    cur.execute("SELECT id, slot_time FROM slots ORDER BY id")
+    slots = cur.fetchall()
+
+    # Check if technician already booked that slot
+    cur.execute("""
+        SELECT slot_id 
+        FROM bookings
+        WHERE booking_date=%s AND technician_id=%s
+    """, (date, tech_id))
+
+    booked_slots = [row[0] for row in cur.fetchall()]
+
+    result = []
+
+    for s in slots:
+        slot_id, time = s
+
+        result.append({
+            "id": slot_id,
+            "time": time,
+            "is_full": slot_id in booked_slots   # 🔥 KEY CHANGE
+        })
+
+    return jsonify(result)
+
+
+# @app.route("/book", methods=["POST"])
+# @login_required
+# def book():
+
+#     cur = mysql.connection.cursor()
+
+#     name = request.form.get('name')
+#     phone = request.form.get('phone')
+#     slot_id = request.form.get('slot_id')
+#     booking_date = request.form.get('booking_date')
+#     tech_id = request.form.get('technician_id')
+#     service_id = request.form.get("service_id")
+
+#     user_id = session['user_id']
+
+#     # ✅ VALIDATION
+#     if not slot_id or not booking_date:
+#         return "❌ Please select date and slot"
+
+#     if not tech_id:
+#         return "❌ Please select technician"
+
+#     if not service_id:
+#         return "❌ Service not selected"
+
+#     # ✅ DUPLICATE CHECK (USER + SLOT + SERVICE)
+#         cur.execute("""
+#         SELECT COUNT(*) 
+#         FROM bookings
+#         WHERE booking_date=%s
+#         AND slot_id=%s
+#         AND technician_id=%s
+#         """, (booking_date, slot_id, tech_id))
+
+#     count = cur.fetchone()[0]
+
+#     if cur.fetchone():
+#         return "❌ Technician already booked for this slot"
+
+#     cur.execute("SELECT max_capacity FROM slots WHERE id=%s", (slot_id,))
+#     capacity = cur.fetchone()[0]
+
+#     if cur.fetchone():
+#         return "❌ Slot fully booked!"
+
+#     # ✅ BOOKING CODE
+#     booking_code = generate_booking_code(name)
+
+#     # ✅ INSERT
+#     cur.execute("""
+#         INSERT INTO bookings
+#         (booking_code, user_id, slot_id, booking_date, payment_status, technician_id, service_id)
+#         VALUES(%s,%s,%s,%s,%s,%s,%s)
+#     """, (
+#         booking_code,
+#         user_id,
+#         slot_id,
+#         booking_date,
+#         "Pending",
+#         tech_id,
+#         service_id
+#     ))
+
+#     mysql.connection.commit()
+
+#     booking_id = cur.lastrowid
+
+#     return redirect(f"/booking-success/{booking_id}")
+
+# @app.route("/book", methods=["POST"])
+# @login_required
+# def book():
+
+#     cur = mysql.connection.cursor()
+
+#     name = request.form.get('name')
+#     phone = request.form.get('phone')
+#     slot_id = request.form.get('slot_id')
+#     booking_date = request.form.get('booking_date')
+#     tech_id = request.form.get('technician_id')
+#     service_id = request.form.get("service_id")
+
+#     user_id = session['user_id']
+
+#     # ✅ VALIDATION
+#     if not slot_id or not booking_date:
+#         return "❌ Please select date and slot"
+
+#     if not tech_id:
+#         return "❌ Please select technician"
+
+#     if not service_id:
+#         return "❌ Service not selected"
+
+#     # ===============================
+#     # ✅ CHECK TECHNICIAN SLOT DUPLICATE
+#     # ===============================
+#     cur.execute("""
+#         SELECT COUNT(*) 
+#         FROM bookings
+#         WHERE booking_date=%s
+#         AND slot_id=%s
+#         AND technician_id=%s
+#     """, (booking_date, slot_id, tech_id))
+
+#     count = cur.fetchone()[0]
+
+#     if count > 0:
+#         cur.close()
+#         return "❌ Technician already booked for this slot"
+
+#     # ===============================
+#     # ✅ CHECK SLOT CAPACITY
+#     # ===============================
+#     cur.execute("SELECT max_capacity FROM slots WHERE id=%s", (slot_id,))
+#     capacity = cur.fetchone()[0]
+
+#     cur.execute("""
+#         SELECT COUNT(*) 
+#         FROM bookings
+#         WHERE booking_date=%s
+#         AND slot_id=%s
+#     """, (booking_date, slot_id))
+
+#     booked_count = cur.fetchone()[0]
+
+#     if booked_count >= capacity:
+#         cur.close()
+#         return "❌ Slot fully booked!"
+
+#     # ===============================
+#     # ✅ CREATE BOOKING
+#     # ===============================
+#     booking_code = generate_booking_code(name)
+
+#     cur.execute("""
+#         INSERT INTO bookings
+#         (booking_code, user_id, slot_id, booking_date, payment_status, technician_id, service_id)
+#         VALUES(%s,%s,%s,%s,%s,%s,%s)
+#     """, (
+#         booking_code,
+#         user_id,
+#         slot_id,
+#         booking_date,
+#         "Pending",
+#         tech_id,
+#         service_id
+#     ))
+
+#     mysql.connection.commit()
+#     booking_id = cur.lastrowid
+#     cur.close()
+
+#     return redirect(f"/booking-success/{booking_id}")
+
 @app.route("/book", methods=["POST"])
 @login_required
 def book():
@@ -264,7 +463,6 @@ def book():
     cur = mysql.connection.cursor()
 
     name = request.form.get('name')
-    phone = request.form.get('phone')
     slot_id = request.form.get('slot_id')
     booking_date = request.form.get('booking_date')
     tech_id = request.form.get('technician_id')
@@ -282,35 +480,27 @@ def book():
     if not service_id:
         return "❌ Service not selected"
 
-    # ✅ DUPLICATE CHECK (USER + SLOT + SERVICE)
-    # cur.execute("""
-    #     SELECT id FROM bookings
-    #     WHERE user_id=%s
-    #     AND booking_date=%s
-    #     AND slot_id=%s
-    #     AND service_id=%s
-    # """, (user_id, booking_date, slot_id, service_id))
-
+    # ===============================
+    # ✅ ONLY TECHNICIAN CHECK (FINAL LOGIC)
+    # ===============================
     cur.execute("""
-    SELECT COUNT(*) 
-    FROM bookings
-    WHERE booking_date=%s
-    AND slot_id=%s
-    AND technician_id=%s
-""", (booking_date, slot_id, tech_id))
-
-    count = cur.fetchone()[0]
-
-    cur.execute("SELECT max_capacity FROM slots WHERE id=%s", (slot_id,))
-    capacity = cur.fetchone()[0]
+        SELECT 1 
+        FROM bookings
+        WHERE booking_date=%s
+        AND slot_id=%s
+        AND technician_id=%s
+        LIMIT 1
+    """, (booking_date, slot_id, tech_id))
 
     if cur.fetchone():
-        return "❌ Slot fully booked!"
+        cur.close()
+        return "❌ Technician already booked for this slot"
 
-    # ✅ BOOKING CODE
+    # ===============================
+    # ✅ CREATE BOOKING
+    # ===============================
     booking_code = generate_booking_code(name)
 
-    # ✅ INSERT
     cur.execute("""
         INSERT INTO bookings
         (booking_code, user_id, slot_id, booking_date, payment_status, technician_id, service_id)
@@ -326,8 +516,8 @@ def book():
     ))
 
     mysql.connection.commit()
-
     booking_id = cur.lastrowid
+    cur.close()
 
     return redirect(f"/booking-success/{booking_id}")
 
@@ -377,6 +567,148 @@ def booking_success(booking_id):
 
     return render_template("booking_success.html", booking=data)
 
+
+
+# @app.route("/get-slots")
+# @login_required
+# def get_slots():
+
+#     date = request.args.get("date")
+#     tech_id = request.args.get("tech_id")
+
+#     cur = mysql.connection.cursor()
+
+#     # ✅ Get all slots
+#     cur.execute("SELECT id, slot_time FROM slots ORDER BY id")
+#     slots = cur.fetchall()
+
+#     result = []
+
+#     for s in slots:
+#         slot_id, time = s
+
+#         # 🔴 If NO technician → disable ALL
+#         if not tech_id:
+#             booked = True
+
+#         else:
+#             # ✅ Check booking for specific technician
+#             cur.execute("""
+#                 SELECT COUNT(*) FROM bookings
+#                 WHERE booking_date=%s
+#                 AND slot_id=%s
+#                 AND technician_id=%s
+#             """, (date, slot_id, tech_id))
+
+#             count = cur.fetchone()[0]
+#             booked = count > 0
+
+#         result.append({
+#             "id": slot_id,
+#             "time": time,
+#             "booked": booked
+#         })
+
+#     return jsonify(result)
+
+# @app.route("/get-slots")
+# @login_required
+# def get_slots():
+
+#     date = request.args.get("date")
+#     tech_id = request.args.get("tech_id")
+
+#     cur = mysql.connection.cursor()
+
+#     # ✅ Get all slots with capacity
+#     cur.execute("SELECT id, slot_time, max_capacity FROM slots ORDER BY id")
+#     slots = cur.fetchall()
+
+#     result = []
+
+#     for s in slots:
+#         slot_id, time, capacity = s
+
+#         # 🔴 If NO technician → disable ALL slots
+#         if not tech_id:
+#             result.append({
+#                 "id": slot_id,
+#                 "time": time,
+#                 "booked": True
+#             })
+#             continue
+
+#         # ✅ Count bookings for this technician
+#         cur.execute("""
+#             SELECT COUNT(*) 
+#             FROM bookings
+#             WHERE booking_date=%s
+#             AND slot_id=%s
+#             AND technician_id=%s
+#         """, (date, slot_id, tech_id))
+
+#         count = cur.fetchone()[0]
+
+#         # ✅ Capacity check
+#         is_full = count >= capacity
+
+#         result.append({
+#             "id": slot_id,
+#             "time": time,
+#             "booked": is_full
+#         })
+
+#     cur.close()
+#     return jsonify(result)
+
+@app.route("/get-slots")
+@login_required
+def get_slots():
+
+    date = request.args.get("date")
+    tech_id = request.args.get("tech_id")
+
+    cur = mysql.connection.cursor()
+
+    # ✅ Get all slots with capacity
+    cur.execute("SELECT id, slot_time, max_capacity FROM slots ORDER BY id")
+    slots = cur.fetchall()
+
+    result = []
+
+    for s in slots:
+        slot_id, time, capacity = s
+
+        # 🔴 If no technician → disable all
+        if not tech_id:
+            result.append({
+                "id": slot_id,
+                "time": time,
+                "booked": True
+            })
+            continue
+
+        # ✅ Count bookings for THIS technician
+        cur.execute("""
+            SELECT COUNT(*) FROM bookings
+            WHERE booking_date=%s
+            AND slot_id=%s
+            AND technician_id=%s
+        """, (date, slot_id, tech_id))
+
+        count = cur.fetchone()[0]
+
+        result.append({
+            "id": slot_id,
+            "time": time,
+            "booked": count >= capacity   # 🔥 FIX
+        })
+
+    cur.close()
+    return jsonify(result)
+
+
+
 @app.route("/get-tech-booked-slots")
 @login_required
 def get_tech_booked_slots():
@@ -384,18 +716,40 @@ def get_tech_booked_slots():
     date = request.args.get("date")
     tech_id = request.args.get("tech_id")
 
+    if not tech_id:
+        return jsonify([])
+
     cur = mysql.connection.cursor()
 
+    # booking count per slot for THIS technician
     cur.execute("""
-        SELECT slot_id FROM bookings
+        SELECT slot_id, COUNT(*) 
+        FROM bookings
         WHERE booking_date=%s AND technician_id=%s
+        GROUP BY slot_id
     """, (date, tech_id))
 
-    data = cur.fetchall()
+    counts = dict(cur.fetchall())
 
-    slots = [row[0] for row in data]
+    # get all slots
+    cur.execute("SELECT id, slot_time, max_capacity FROM slots ORDER BY id")
+    slots = cur.fetchall()
 
-    return jsonify(slots)
+    result = []
+
+    for s in slots:
+        slot_id, time, capacity = s
+        booked = counts.get(slot_id, 0)
+
+        result.append({
+            "id": slot_id,
+            "time": time,
+            "booked_count": booked,
+            "capacity": capacity,
+            "is_full": booked >= capacity   # 🔥 key logic
+        })
+
+    return jsonify(result)
 
 # Admin Page
 @app.route("/admin")
@@ -673,7 +1027,7 @@ def booking():
     service_id = request.args.get("service_id")
 
     if not service_id:
-        return "❌ Service ID missing"
+        return redirect("/home")
 
     cur = mysql.connection.cursor()
 
@@ -771,6 +1125,7 @@ def toggle_tech():
 
     return redirect("/booking")
 
+
 @app.route("/update-tech-location", methods=["POST"])
 def update_location():
 
@@ -808,46 +1163,185 @@ def get_tech_location():
         "lng": tech[1]
     })
 
+# @app.route("/add_technician", methods=["POST"])
+# @admin_required
+# def add_technician():
+#     try:
+#         cur = mysql.connection.cursor()
+
+#         name = request.form.get("name")
+#         phone1 = request.form.get("phone1")
+#         phone2 = request.form.get("phone2")
+
+#         address = request.form.get("flat")
+#         street = request.form.get("street")
+#         post = request.form.get("post")
+#         taluk = request.form.get("taluk")
+#         district = request.form.get("district")
+#         pincode = request.form.get("pincode")
+
+#         education = request.form.get("education")
+#         proof_type = request.form.get("govtType")
+#         proof_file = request.form.get("govtNumber")
+
+#         resume_file = request.files.get("resume")
+#         photo_file = request.files.get("photo")
+
+#         resume_path = None
+#         photo_path = None
+
+#         # Resume (PDF)
+#         if resume_file and resume_file.filename != "":
+#             filename = secure_filename(resume_file.filename)
+#             resume_path = f"documents/{filename}"
+#             resume_file.save(os.path.join(app.config['DOC_FOLDER'], filename))
+
+#         # Photo
+#         if photo_file and photo_file.filename != "":
+#             filename = secure_filename(photo_file.filename)
+#             photo_path = f"uploads/{filename}"
+#             photo_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+#         # ✅ DUPLICATE CHECK
+#         cur.execute("""
+#             SELECT id FROM technician
+#             WHERE name=%s AND phone1=%s AND street=%s
+#         """, (name, phone1, street))
+
+#         if cur.fetchone():
+#             return jsonify({"error": "Technician already exists"}), 400
+
+#         # ✅ INSERT (MATCH DB STRUCTURE)
+#         cur.execute("""
+#             INSERT INTO technician
+#             (name, phone1, phone2, address, street, post, taluk, district, pincode,
+#              education, proof_type, proof_file, resume_path, photo_path, status, active)
+#             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Available',1)
+#         """, (
+#             name, phone1, phone2, address, street, post,
+#             taluk, district, pincode,
+#             education, proof_type, proof_file,
+#             resume_path, photo_path
+#         ))
+
+#         mysql.connection.commit()
+
+#         return jsonify({"status": "success"})
+
+#     except Exception as e:
+#         print("ERROR:", e)
+#         return jsonify({"error": str(e)}), 500
+
+
 @app.route("/add_technician", methods=["POST"])
 @admin_required
 def add_technician():
     try:
         cur = mysql.connection.cursor()
 
-        name = request.form.get("name")
+        # ================= BASIC =================
+        first = (request.form.get("first_name") or "").strip()
+        last = (request.form.get("last_name") or "").strip()
+        name = " ".join(filter(None, [first, last]))
+
         phone1 = request.form.get("phone1")
         phone2 = request.form.get("phone2")
+        dob = request.form.get("dob")
 
-        address = request.form.get("flat")
+        # ================= ADDRESS =================
+        flat = request.form.get("flat")
         street = request.form.get("street")
         post = request.form.get("post")
         taluk = request.form.get("taluk")
         district = request.form.get("district")
+        state = request.form.get("state")
         pincode = request.form.get("pincode")
 
-        education = request.form.get("education")
-        proof_type = request.form.get("govtType")
-        proof_file = request.form.get("govtNumber")
+        # 🔥 FULL ADDRESS FIX
+        address = ", ".join(filter(None, [
+            flat, street, post, taluk, district, state, pincode
+        ]))
 
+        # ================= EDUCATION =================
+        edu1 = request.form.get("education_primary")
+        edu2 = request.form.get("education_secondary")
+        education = ", ".join(filter(None, [edu1, edu2]))
+
+        # ================= PROOF =================
+        proof_type = request.form.get("proof_type")
+        id_number = request.form.get("id_number")
+        proof_file = request.files.get("proof_file")
+
+        # ================= BANK =================
+        account_name = request.form.get("account_name")
+        account_number = request.form.get("account_number")
+        ifsc = request.form.get("ifsc")
+
+        # ================= SYSTEM =================
+        def parse_float(val):
+            try:
+                return float(val)
+            except:
+                return None
+
+        latitude = parse_float(request.form.get("latitude"))
+        longitude = parse_float(request.form.get("longitude"))
+        active = request.form.get("active") or 1
+
+        # ================= FILES =================
         resume_file = request.files.get("resume")
         photo_file = request.files.get("photo")
 
         resume_path = None
         photo_path = None
+        proof_path = None
 
-        # Resume (PDF)
-        if resume_file and resume_file.filename != "":
+        # ---------- Resume ----------
+        if resume_file and resume_file.filename:
             filename = secure_filename(resume_file.filename)
+
+            if not filename.lower().endswith(".pdf"):
+                return jsonify({"error": "Resume must be PDF"}), 400
+
             resume_path = f"documents/{filename}"
             resume_file.save(os.path.join(app.config['DOC_FOLDER'], filename))
 
-        # Photo
-        if photo_file and photo_file.filename != "":
+        # ---------- Proof ----------
+        if proof_file and proof_file.filename:
+            filename = secure_filename(proof_file.filename)
+
+            if not filename.lower().endswith(".pdf"):
+                return jsonify({"error": "Proof must be PDF"}), 400
+
+            proof_path = f"documents/{filename}"
+            proof_file.save(os.path.join(app.config['DOC_FOLDER'], filename))
+
+        # ---------- Photo ----------
+        if photo_file and photo_file.filename:
             filename = secure_filename(photo_file.filename)
             photo_path = f"uploads/{filename}"
             photo_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-        # ✅ DUPLICATE CHECK
+        # ================= VALIDATION =================
+        if not first or not last:
+            return jsonify({"error": "First & Last name required"}), 400
+
+        if not phone1 or not phone1.isdigit() or len(phone1) != 10:
+            return jsonify({"error": "Phone1 must be 10 digits"}), 400
+
+        if phone2 and (not phone2.isdigit() or len(phone2) != 10):
+            return jsonify({"error": "Phone2 must be 10 digits"}), 400
+
+        if pincode and (not pincode.isdigit() or len(pincode) != 6):
+            return jsonify({"error": "Invalid pincode"}), 400
+
+        if not proof_type or not id_number:
+            return jsonify({"error": "Proof details required"}), 400
+
+        if not proof_path:
+            return jsonify({"error": "Proof file required"}), 400
+
+        # ================= DUPLICATE CHECK =================
         cur.execute("""
             SELECT id FROM technician
             WHERE name=%s AND phone1=%s AND street=%s
@@ -856,17 +1350,28 @@ def add_technician():
         if cur.fetchone():
             return jsonify({"error": "Technician already exists"}), 400
 
-        # ✅ INSERT (MATCH DB STRUCTURE)
+        # ================= INSERT =================
         cur.execute("""
             INSERT INTO technician
-            (name, phone1, phone2, address, street, post, taluk, district, pincode,
-             education, proof_type, proof_file, resume_path, photo_path, status, active)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Available',1)
+            (name, phone1, phone2, address, street, post, taluk, district, state, pincode,
+             education, proof_type, id_number, proof_file,
+             resume_path, photo_path,
+             account_name, account_number, ifsc,
+             latitude, longitude, dob,
+             status, active)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,
+                    %s,%s,
+                    %s,%s,%s,
+                    %s,%s,%s,
+                    'Available',%s)
         """, (
-            name, phone1, phone2, address, street, post,
-            taluk, district, pincode,
-            education, proof_type, proof_file,
-            resume_path, photo_path
+            name, phone1, phone2, address, street, post, taluk, district, state, pincode,
+            education, proof_type, id_number, proof_path,
+            resume_path, photo_path,
+            account_name, account_number, ifsc,
+            latitude, longitude, dob,
+            active
         ))
 
         mysql.connection.commit()
@@ -1003,7 +1508,7 @@ def search_tech():
 
     cur = mysql.connection.cursor()
     # cur.execute("SELECT * FROM technician WHERE name LIKE %s", ('%'+q+'%',))
-    cur.execute("""SELECT * FROM technician WHERE name LIKE %s OR phone1 LIKE %s """, ('%' + q + '%', '%' + q + '%'))
+    cur.execute("""SELECT * FROM technician WHERE active = 1 AND (name LIKE %s OR phone1 LIKE %s)""", ('%' + q + '%', '%' + q + '%'))
     data = cur.fetchall()
 
     result = []
