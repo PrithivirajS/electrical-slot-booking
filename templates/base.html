@@ -13,15 +13,41 @@
 
 <!-- ===== SIDEBAR ===== -->
 <div class="sidebar" id="sidebar">
-    <h2>⚡ E-service</h2>
+    <h2>
+        <a href="/home" class="logo-link">⚡ E-service</a>
+    </h2>
 
     <ul>
-        <li><a href="/home" class="menu-item">Home</a></li>
+        <!-- <li><a href="/home" class="menu-item">Home</a></li>
         <li><a href="/dashboard" class="menu-item active">Dashboard</a></li>
         <li><a href="/users" class="menu-item">Users</a></li>
         <li><a href="/technicians" class="menu-item">Technicians</a></li>
         <li><a href="/booking" class="menu-item">Booking</a></li>
-        <li><a href="/customers" class="menu-item">Customers</a></li>
+        <li><a href="/customers" class="menu-item">Customers</a></li> -->
+
+        <li>
+            <a href="/home" class="menu-item {{ 'active' if current_path == '/home' else '' }}">Home</a>
+        </li>
+
+        <li>
+            <a href="/dashboard" class="menu-item {{ 'active' if current_path == '/dashboard' else '' }}">Dashboard</a>
+        </li>
+
+        <li>
+            <a href="/users" class="menu-item {{ 'active' if current_path == '/users' else '' }}">Users</a>
+        </li>
+
+        <li>
+            <a href="/technicians" class="menu-item {{ 'active' if current_path == '/technicians' else '' }}">Technicians</a>
+        </li>
+
+        <li>
+            <a href="/booking" class="menu-item {{ 'active' if current_path == '/booking' else '' }}">Booking</a>
+        </li>
+
+        <li>
+            <a href="/customers" class="menu-item {{ 'active' if current_path == '/customers' else '' }}">Customers</a>
+        </li>
     </ul>
 </div>
 
@@ -35,12 +61,41 @@
             <h3>Welcome, {{ session['username'] }}</h3>
         </div>
 
-        <div class="topbar-right">
+<!--         <div class="topbar-right">
             <span>🔔 3</span>
             <div class="profile-circle">
                 <span id="initial"></span>
             </div>
             <span>{{ session['username'] }}</span>
+        </div> -->
+
+        <div class="topbar-right">
+
+            <div class="notification">
+                🔔
+                <span class="badge">3</span>
+            </div>
+
+            <div class="profile-dropdown">
+                <div class="profile-box" id="profileBtn">
+                    <div class="profile-circle">
+                        <span id="initial"></span>
+                    </div>
+                    <span class="username">{{ session['username'] }}</span>
+                </div>
+
+                <div class="dropdown-menu" id="profileDropdown">
+                    <div class="dropdown-header">{{ session['username'] }}</div>
+                    <div class="dropdown-divider"></div>
+
+                    <a href="/profile" class="dropdown-item">Profile</a>
+
+                    <div class="dropdown-divider"></div>
+
+                    <a href="/logout" class="dropdown-item logout">Logout</a>
+                </div>
+            </div>
+
         </div>
     </div>
 

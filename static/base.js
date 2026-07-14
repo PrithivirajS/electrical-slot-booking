@@ -2,43 +2,6 @@ function el(id){
     return document.getElementById(id);
 }
 
-// function toggleSidebar(){
-//     const sidebar = el("sidebar");
-//     const main = el("main");
-
-//     sidebar.classList.toggle("collapsed");
-//     main.classList.toggle("expanded");
-// }
-
-// function toggleSidebar(){
-//     const sidebar = el("sidebar");
-//     const main = el("main");
-//     const overlay = el("overlay");
-
-//     sidebar.classList.toggle("collapsed");
-//     main.classList.toggle("expanded");
-//     overlay.classList.toggle("show");
-// }
-
-// function toggleSidebar(){
-//     const sidebar = document.getElementById("sidebar");
-//     const overlay = document.getElementById("overlay");
-
-//     sidebar.classList.toggle("collapsed");
-//     overlay.classList.toggle("show");
-// }
-
-function toggleSidebar(){
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("overlay");
-
-    sidebar.classList.toggle("open");
-    overlay.classList.toggle("show");
-}
-
-/* close when clicking overlay */
-document.getElementById("overlay").addEventListener("click", toggleSidebar);
-
 function loadProfile(){
     if(!el("initial")) return;
 
@@ -68,3 +31,21 @@ window.onload = function(){
     loadProfile();
     liveClock();
 };
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const btn = document.getElementById("profileBtn");
+    const dropdown = document.getElementById("profileDropdown");
+
+    if(btn){
+        btn.addEventListener("click", function(e){
+            e.stopPropagation();
+            dropdown.classList.toggle("show");
+        });
+    }
+
+    document.addEventListener("click", function(){
+        dropdown.classList.remove("show");
+    });
+
+});
