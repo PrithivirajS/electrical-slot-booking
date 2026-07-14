@@ -1,18 +1,15 @@
 * ================= LAYOUT ================= */
-/*.booking-container {
-    display: flex;
-    gap: 30px;
-    margin-top: 20px;
-}*/
-
 .booking-container {
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin: 20px auto;
 }
-/*.booking-left { flex: 2; }*/
 
 .booking-left {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
     background: #ffffff;
     padding: 20px;
     border-radius: 16px;
@@ -29,20 +26,49 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
+
+.booking-container {
+    display: flex;
+    gap: 25px;
+    margin: 20px auto;
+}
+
+.booking-left {
+    flex: 2;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.booking-right {
+    flex: 1;
+    position: sticky;
+    top: 20px;
+    background: white;
+    padding: 18px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
 /* ================= SERVICE ================= */
 .service-card {
-    display: flex;
+/*    display: flex;
     gap: 15px;
     padding: 15px;
     background: white;
     border-radius: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 20px;*/
+
+    padding: 18px;
+    border-radius: 16px;
+    background: linear-gradient(135deg,#7c3aed,#9333ea);
+    color: white;
 }
 
 .service-img { width: 60px; }
 
 .price {
-    color: #6366f1;
+    color: #f7f40d;
     font-weight: bold;
 }
 
